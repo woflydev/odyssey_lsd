@@ -1,23 +1,27 @@
 import cv2
 import argparse
-import numpy as np
-from PIL import Image
 import tensorflow as tf
-from utils.motor_lib.driver import move, off, drivePin
-from utils import ( roi,
-		   							pwm,
-		   							pred_lines,
-		   							calc_lines,
-										add_to_mask, 
-										calc_steering,
-										stabilize,
-										heading,
-										pred_squares )
+try:
+	from utils.motor_lib.driver import move, off, drivePin
+except:
+	print("FAILED TO INITIALIZE. RUNNING ANYWAY!")
+from tools import ( roi,
+		   			pwm,
+					show,
+		   			pred_lines,
+		   			calc_lines,
+					add_to_mask, 
+					calc_steering,
+					stabilize,
+					heading,
+					pred_squares )
 
 WIDTH_CROP_FACTOR = 1
 HEIGHT_CROP_FACTOR = 2
 VIDEO_SOURCE = 0
 BASE_SPEED = 80
+
+SHOW_IMAGES = False
 
 def segments(img_input, score_thr, dist_thr):
 	try:
@@ -70,13 +74,17 @@ while True:
 	
 	print(f"Motor Left: {left}, Motor Right: {right}")
 
-	move(left, right)
+	try:
+		move(left, right)
+	except:
+		pass
 
-	cv2.imshow("original", frame)
-	cv2.imshow("lines", result)
-	cv2.imshow("line mask", pot_line_mask)
-	cv2.imshow("preview", preview)
+	show("original", frame, SHOW_IMAGES)
+	show("lines", result, SHOW_IMAGES)
+	show("line mask", pot_line_mask, SHOW_IMAGES)
+	show("preview", preview, SHOW_IMAGES)
 
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		off()
 		break
+		

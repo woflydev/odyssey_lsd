@@ -20,7 +20,7 @@ from PIL import Image
 import tensorflow as tf
 
 # for square detector
-from utils import pred_squares
+from tools import pred_squares
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '' # CPU mode
 

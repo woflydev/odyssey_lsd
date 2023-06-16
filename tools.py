@@ -4,6 +4,10 @@ import cv2
 import tensorflow as tf
 import math
 
+def show(window_name, frame, show_img):
+	if show_img:
+		cv2.imshow(window_name, frame)
+
 def roi(image, factor_h, factor_w):
 	cropped_img = image[image.shape[0] // factor_h : image.shape[0] // factor_w]
 	return cropped_img

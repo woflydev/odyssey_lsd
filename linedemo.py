@@ -2,7 +2,7 @@ from PIL import Image
 import cv2
 import numpy as np
 import tensorflow as tf
-from utils import pred_lines, pred_squares
+from tools import pred_lines, pred_squares
 import gradio as gr
 from gradio.components import Number
 from urllib.request import urlretrieve, build_opener, install_opener
