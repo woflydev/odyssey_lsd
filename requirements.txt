@@ -1,0 +1,7 @@
+numpy
+opencv-python
+pillow
+#tensorflow-gpu=2.3.0
+tensorflow #tensorflow-gpu is deprecated
+Flask
+gradio
