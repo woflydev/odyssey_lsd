@@ -3,6 +3,7 @@ import argparse
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+from utils.motor_lib.driver import move, off, drivePin
 from utils import ( roi,
 		   							pwm,
 		   							pred_lines,
@@ -15,7 +16,7 @@ from utils import ( roi,
 
 WIDTH_CROP_FACTOR = 1
 HEIGHT_CROP_FACTOR = 2
-VIDEO_SOURCE = 4
+VIDEO_SOURCE = 0
 BASE_SPEED = 80
 
 def segments(img_input, score_thr, dist_thr):
@@ -69,10 +70,13 @@ while True:
 	
 	print(f"Motor Left: {left}, Motor Right: {right}")
 
+	move(left, right)
+
 	cv2.imshow("original", frame)
 	cv2.imshow("lines", result)
 	cv2.imshow("line mask", pot_line_mask)
 	cv2.imshow("preview", preview)
 
 	if cv2.waitKey(1) & 0xFF == ord('q'):
+		off()
 		break
