@@ -21,7 +21,7 @@ HEIGHT_CROP_FACTOR = 2
 VIDEO_SOURCE = 0
 BASE_SPEED = 80
 
-SHOW_IMAGES = False
+SHOW_IMAGES = True
 
 def segments(img_input, score_thr, dist_thr):
 	try:
