@@ -17,4 +17,4 @@ def send(host=HOST, port=PORT, values=(0, 0)):
     print("\nREQUEST:   {}".format(values))
     print("RESPONSE:  {}".format(received))
 
-    time.sleep(0.01)
+    time.sleep(0.005)
