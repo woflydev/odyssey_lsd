@@ -1,13 +1,3 @@
-"""try:
-    from board import SCL, SDA
-    import busio
-    from adafruit_pca9685 import PCA9685
-except ImportError:
-    raise ImportError("Motor driver not initialized. Only runs on Linux!")
-
-from time import sleep
-from math import abs""" #old driver code
-
 # from board import SCL, SDA
 # import busio
 # from adafruit_pca9685 import PCA9685
@@ -140,6 +130,38 @@ def turn(speed: float, radius: float, timeout=0):
     elif(radius == 0):
         move(omega * (r - HALF_WIDTH), omega * (r + HALF_WIDTH), timeout)
 
+# # input -100 to 100 left and right sides
+# def move(LIN, RIN, timeout=0):
+#     LIN = round(LIN / 5) * 5
+#     RIN = round(RIN / 5) * 5
+#     L = LIN * MAP_CONST  # map values to 0-1
+#     R = RIN * MAP_CONST
+#     #print(L, R)
+#     if L == 0 and R == 0:
+#         off()
+#         brake()
+#     else:
+#         #print(L, R)
+#         if L > 0:
+#             motorLA.write(1)
+#             motorLB.write(0)
+#         else:
+#             motorLA.write(0)
+#             motorLB.write(1)
+#         if R > 0:
+#             motorRA.write(1)
+#             motorRB.write(0)
+#         else:
+#             motorRA.write(0)
+#             motorRB.write(1)
+        
+#         motorPWML.write(abs(L))
+#         motorPWMR.write(abs(R))
+
+#     if timeout > 0:
+#         sleep(timeout / 1000)
+#         off()
+
 # input -100 to 100 left and right sides
 def move(LIN, RIN, timeout=0):
     LIN = round(LIN / 5) * 5
@@ -153,20 +175,13 @@ def move(LIN, RIN, timeout=0):
     else:
         #print(L, R)
         if L > 0:
-            motorLA.write(1)
-            motorLB.write(0)
+            motorPWML.write(abs(L))
         else:
-            motorLA.write(0)
-            motorLB.write(1)
+            motorPWML.write(0)
         if R > 0:
-            motorRA.write(1)
-            motorRB.write(0)
+            motorPWMR.write(abs(R))
         else:
-            motorRA.write(0)
-            motorRB.write(1)
-        
-        motorPWML.write(abs(L))
-        motorPWMR.write(abs(R))
+            motorPWMR.write(0)
 
     if timeout > 0:
         sleep(timeout / 1000)
