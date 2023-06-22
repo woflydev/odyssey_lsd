@@ -8,9 +8,9 @@ def show(window_name, frame, show_img):
 	if show_img:
 		cv2.imshow(window_name, frame)
 
-def roi(image, factor_h, factor_w):
-	cropped_img = image[image.shape[0] // factor_h : image.shape[0] // factor_w]
-	return cropped_img
+def roi(image):
+	cropped_img = image[image.shape[1] // 2 : image.shape[0] // 1]
+	return cropped_img, cropped_img.shape[1], cropped_img.shape[0]
 
 def add_to_mask(lines, mask_shape):
 	mask = np.zeros(mask_shape, dtype=np.uint8)
@@ -77,16 +77,13 @@ def calc_lines(frame, line_segments, height, width):
 	return line_image, lane_lines
 
 def calc_steering(frame, lane_lines):
-	""" Find the steering angle based on lane line coordinate
-		We assume that camera is calibrated to point to dead center
-	"""
 	if len(lane_lines) == 0:
-		print('INFO: No lane lines detected, do nothing')
+		print('INFO: No lines detected...')
 		return -90
 
 	height, width, _ = frame.shape
 	if len(lane_lines) == 1:
-		print('WARNING: Only detected one lane line, just follow it. %s' % lane_lines[0])
+		print('WARNING: Only 1 lane detected...')
 		x1, _, x2, _ = lane_lines[0][0]
 		x_offset = x2 - x1
 	else:

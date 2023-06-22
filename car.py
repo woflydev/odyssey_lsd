@@ -3,8 +3,10 @@ import argparse
 import tensorflow as tf
 try:
 	from utils.motor_lib.driver import move, off, drivePin
+	DRIVER_INITIALIZED = True
 except:
 	print("FAILED TO INITIALIZE. RUNNING ANYWAY!")
+	DRIVER_INITIALIZED = False
 from tools import ( roi,
 		   			pwm,
 					show,
@@ -16,11 +18,8 @@ from tools import ( roi,
 					heading,
 					pred_squares )
 
-WIDTH_CROP_FACTOR = 1
-HEIGHT_CROP_FACTOR = 2
 VIDEO_SOURCE = 0
 BASE_SPEED = 80
-
 SHOW_IMAGES = True
 
 def segments(img_input, score_thr, dist_thr):
@@ -52,8 +51,6 @@ output_details = interpreter.get_output_details()
 cap = cv2.VideoCapture(VIDEO_SOURCE)
 IMAGE_W  = int(cap.get(3))  # float `width`
 IMAGE_H = int(cap.get(4))  # float `height`
-IMAGE_CROPPED_W = IMAGE_W // WIDTH_CROP_FACTOR
-IMAGE_CROPPED_H = IMAGE_H // HEIGHT_CROP_FACTOR
 
 angle = 0
 while True:
@@ -62,22 +59,19 @@ while True:
 		print("no camera feed detected!")
 		exit()
 
-	cropped = roi(frame, HEIGHT_CROP_FACTOR, WIDTH_CROP_FACTOR)
-	result, pot_lines = segments(cropped, 0.13, 20) #used to be 0.1
-	pot_line_mask = add_to_mask(pot_lines, (IMAGE_CROPPED_H, IMAGE_CROPPED_W))
-	lane_frame, lane_lines = calc_lines(cropped, pot_lines, IMAGE_CROPPED_H, IMAGE_CROPPED_W)
+	cropped, CROPPED_W, CROPPED_H = roi(frame)
+	#print(CROPPED_W, CROPPED_H)
+	result, pot_lines = segments(cropped, 0.13, 20) #used to be 0.1, configures model sensitivity
+	pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
+	lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
 	pot_angle = calc_steering(cropped, lane_lines)
 	angle = stabilize(angle, pot_angle, len(lane_lines))
-	preview = heading(lane_frame, angle, IMAGE_CROPPED_H, IMAGE_CROPPED_W)
-	
+	preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
+
 	left, right = pwm(BASE_SPEED, angle - 90)
-	
 	print(f"Motor Left: {left}, Motor Right: {right}")
 
-	try:
-		move(left, right)
-	except:
-		pass
+	move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
 
 	show("original", frame, SHOW_IMAGES)
 	show("lines", result, SHOW_IMAGES)
@@ -85,6 +79,5 @@ while True:
 	show("preview", preview, SHOW_IMAGES)
 
 	if cv2.waitKey(1) & 0xFF == ord('q'):
-		off()
+		off() if DRIVER_INITIALIZED else 0
 		break
-		

@@ -12,5 +12,3 @@ def process_data(frame):
     return output
 
 cv2.imwrite("peppa pig honk honk.png",process_data(cv2.imread("data/test1.png")))
-
-    
