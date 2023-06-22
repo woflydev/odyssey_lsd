@@ -60,8 +60,7 @@ while True:
 		exit()
 
 	cropped, CROPPED_W, CROPPED_H = roi(frame)
-	#print(CROPPED_W, CROPPED_H)
-	result, pot_lines = segments(cropped, 0.13, 20) #used to be 0.1, configures model sensitivity
+	result, pot_lines = segments(cropped, 0.13, 20) # used to be 0.1, configures model sensitivity
 	pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
 	lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
 	pot_angle = calc_steering(cropped, lane_lines)
@@ -69,6 +68,11 @@ while True:
 	preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
 
 	left, right = pwm(BASE_SPEED, angle - 90)
+
+	# new drivers do not support backwards
+	left = 0 if left < 0 else left
+	right = 0 if right < 0 else right
+
 	print(f"Motor Left: {left}, Motor Right: {right}")
 
 	move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
