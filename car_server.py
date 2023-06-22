@@ -9,7 +9,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {self.data}")
             self.request.sendall(b"HANDSHAKE OK!")
 
-            move(self.data[0], self.data[1])
+            left, right = self.data.split(" ")
+
+            move(left, right)
         except:
             self.request.sendall(b"INTERNAL SERVER ERROR!")
             print("INTERNAL SERVER ERROR!")
