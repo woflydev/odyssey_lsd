@@ -74,7 +74,7 @@ while True:
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
 		#move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
-		car_client.send(f"{left} {right}")
+		car_client.send(host="192.168.171.95", port=6969, values=f"{left} {right}")
 
 		show("original", frame, SHOW_IMAGES)
 		show("lines", result, SHOW_IMAGES)
