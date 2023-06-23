@@ -3,36 +3,51 @@ import numpy as np
 import socket
 import pickle
 import struct
-import time
+import signal
 
 ####################################################################################################
 
-SERVER_IP = '192.168.0.156'
-PORT = 6969
+SERVER_IP = 'localhost'
+PWM_PORT = 6969
+VIDEO_PORT = 6970
 
 ####################################################################################################
 
-def send(server_ip=SERVER_IP, port=PORT):
-	values = "req_pwm"
-	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-		sock.connect((server_ip, port))
-		sock.sendall(bytes(f"{values}", "utf-8"))
-		received = str(sock.recv(1024), "utf-8")
+def request_pwm(s, values):
+	values = b"req_pwm"
+	s.sendall(bytes(f"{values}", "utf-8"))
+	received = format(str(s.recv(1024), "utf-8"))
 
 	print("\nREQUEST:   {}".format(values))
-	print("RESPONSE:  {}".format(received))
+	print("RESPONSE:  {}", received)
 
-	time.sleep(0.003)
+	return received
+
+def send_video(s, frame):
+	data = pickle.dumps(frame)
+	message_size = struct.pack("L", len(data))
+	s.sendall(message_size + data)
+	
+def exit_handler(signum, frame):
+	msg = "KEYBOARD INTERRUPT!"
+	print(msg, end="", flush=True)
+	cv2.destroyAllWindows()
+	exit()
 
 ####################################################################################################
+
+signal.signal(signal.SIGINT, exit_handler)
 
 print("INITIALIZING CAMERA...")
 cap = cv2.VideoCapture(0)
 
 try:
-	print("ATTEMPTING TO CONNECT TO SERVER AT " + SERVER_IP + ":" + str(PORT) + "...")
-	clientsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-	clientsocket.connect((SERVER_IP, PORT))
+	pwmsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+	videosocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+	print("CONNECTING TO PWM SERVER AT " + SERVER_IP + ":" + str(PWM_PORT) + "...")
+	pwmsocket.connect((SERVER_IP, PWM_PORT))
+	print("CONNECTING TO VIDEO SERVER AT " + SERVER_IP + ":" + str(VIDEO_PORT) + "...")
+	videosocket.connect((SERVER_IP, VIDEO_PORT))
 	print("CONNECTION ESTABLISHED!")
 except:
 	print("CONNECTION DROPPED!")
@@ -45,8 +60,6 @@ while True:
 		print("NO VIDEO FEED FOUND!")
 		break
 	
-	data = pickle.dumps(frame)
-	message_size = struct.pack("L", len(data))
-	clientsocket.sendall(message_size + data)
-	
+	send_video(videosocket, frame)
+
 ####################################################################################################
