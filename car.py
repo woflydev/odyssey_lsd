@@ -20,7 +20,7 @@ from tools import ( roi,
 					pred_squares )
 
 VIDEO_SOURCE = 4
-BASE_SPEED = 10
+BASE_SPEED = 40
 SHOW_IMAGES = True
 
 def segments(img_input, score_thr, dist_thr):
@@ -53,7 +53,7 @@ cap = cv2.VideoCapture(VIDEO_SOURCE)
 IMAGE_W  = int(cap.get(3))  # float `width`
 IMAGE_H = int(cap.get(4))  # float `height`
 
-angle = 0
+angle = 90
 while True:
 	try:
 		ret, frame = cap.read()
@@ -69,11 +69,11 @@ while True:
 		angle = stabilize(angle, pot_angle, len(lane_lines))
 		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
 
-		left, right = pwm(BASE_SPEED, angle)
+		left, right = pwm(BASE_SPEED, angle - 90)
 
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
-		#move(left, right) if DRIVER_INITIALIZED else return 0 # if motor driver is enabled, drive
+		move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
 
 		show("original", frame, SHOW_IMAGES)
 		show("lines", result, SHOW_IMAGES)
