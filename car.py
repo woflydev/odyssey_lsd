@@ -1,10 +1,9 @@
 import cv2
 import argparse
 import tensorflow as tf
-import signal
 import time
 try:
-	from utils.motor_lib.driver import move, off, exit_handler
+	from utils.motor_lib.driver import move, off
 	DRIVER_INITIALIZED = True
 except:
 	print("FAILED TO INITIALIZE. RUNNING ANYWAY!")
@@ -21,7 +20,7 @@ from tools import ( roi,
 					pred_squares )
 
 VIDEO_SOURCE = 4
-BASE_SPEED = 60
+BASE_SPEED = 30
 SHOW_IMAGES = True
 
 def segments(img_input, score_thr, dist_thr):
@@ -56,7 +55,7 @@ IMAGE_H = int(cap.get(4))  # float `height`
 
 angle = 90
 print("Starting...")
-move(80, 80)
+move(20, 20)
 time.sleep(0.2)
 while True:
 		ret, frame = cap.read()
@@ -72,7 +71,7 @@ while True:
 		angle = stabilize(angle, pot_angle, len(lane_lines))
 		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
 
-		right, left = pwm(BASE_SPEED, angle - 90)
+		left, right = pwm(BASE_SPEED, angle - 90)
 
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
@@ -87,6 +86,5 @@ while True:
 
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			if DRIVER_INITIALIZED:
-				signal.signal(signal.SIGINT, exit_handler)
 				off()
 			exit()
