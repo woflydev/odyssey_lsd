@@ -33,6 +33,8 @@ class TCPHandler(socketserver.BaseRequestHandler):
 		
 		fake_data = f"{random.randint(0, 100)} {random.randint(0, 100)}"
 		self.request.sendall(bytes(fake_data, "utf-8"))
+		
+		print(f"\nSENT TO CLIENT {format(self.client_address[0])}: {fake_data}")
 
 def get_ip():
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -74,22 +76,22 @@ if __name__ == "__main__":
 	signal.signal(signal.SIGINT, exit_handler)
 
 	while True:
-			while len(video_data) < video_payload_size:
-				video_data += conn.recv(4096)
+		while len(video_data) < video_payload_size:
+			video_data += conn.recv(4096)
 
-			packed_msg_size = video_data[:video_payload_size]
-			video_data = video_data[video_payload_size:]
-			msg_size = struct.unpack("L", packed_msg_size)[0]
+		packed_msg_size = video_data[:video_payload_size]
+		video_data = video_data[video_payload_size:]
+		msg_size = struct.unpack("L", packed_msg_size)[0]
 
-			while len(video_data) < msg_size:
-				video_data += conn.recv(4096)
+		while len(video_data) < msg_size:
+			video_data += conn.recv(4096)
 
-			frame_data = video_data[:msg_size]
-			video_data = video_data[msg_size:]
-			
-			frame = pickle.loads(frame_data)
-			
-			cv2.imshow('frame', frame)
-			cv2.waitKey(1) # this is required for some reason
+		frame_data = video_data[:msg_size]
+		video_data = video_data[msg_size:]
+		
+		frame = pickle.loads(frame_data)
+		
+		cv2.imshow('frame', frame)
+		cv2.waitKey(1) # this is required for some reason
 
 ####################################################################################################

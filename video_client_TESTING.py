@@ -22,7 +22,7 @@ def request_pwm(sock, values):
 
 	print(f"\nREQUEST:   {format(values)}", )
 	print(f"RESPONSE:  {format(received)}")
-	
+
 	return received
 	
 def exit_handler(signum, frame):
@@ -43,7 +43,10 @@ except:
 	exit()
 
 while True:
+	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	pwmsocket.connect((SERVER_IP, PWM_PORT))
 	pwm = request_pwm(pwmsocket, "req_pwm")
 	print(f"RECEIVED PWM: {format(pwm)}")
+	pwmsocket.close()
 
 ####################################################################################################
