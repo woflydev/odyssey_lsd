@@ -132,24 +132,18 @@ def stabilize(current, new, num_lanes, max_confident_deviation=5, max_unsure_dev
 	return stabilized_steering_angle
 
 def heading(frame, angle, height, width):
-	# figure out the heading line from steering angle. heading line always at bottom of screen
-	# Note: the steering angle of:
-	# 0-89 degree: turn left
-	# 90 degree: going straight
-	# 91-180 degree: turn right 
-
 	heading_image = np.zeros_like(frame)
+	height, width, _ = frame.shape
+
+	# figure out the heading line from steering angle
+	# heading line (x1,y1) is always center bottom of the screen
+	# (x2, y2) requires a bit of trigonometry
+
 	radians = angle / 180.0 * math.pi
-	try: #chance of div by 0
-		x1 = int(width // 2)
-		y1 = height
-		x2 = int(x1 - height // 2 // math.tan(radians))
-		y2 = int(height // 2)
-	except:
-		x1 = int(width // 2)
-		y1 = height
-		x2 = int(x1 - height // 2 // (math.tan(radians) + 1))
-		y2 = int(height // 2)
+	x1 = int(width / 2)
+	y1 = height
+	x2 = int(x1 - height / 2 / math.tan(radians))
+	y2 = int(height / 2)
 
 	cv2.line(heading_image, (x1, y1), (x2, y2), (0, 0, 255), 10)
 	heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)

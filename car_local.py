@@ -19,7 +19,7 @@ from tools import ( roi,
 					heading,
 					pred_squares )
 
-VIDEO_SOURCE = 4
+VIDEO_SOURCE = 0
 BASE_SPEED = 30
 SHOW_IMAGES = True
 
@@ -55,8 +55,6 @@ IMAGE_H = int(cap.get(4))  # float `height`
 
 angle = 90
 print("Starting...")
-move(20, 20)
-time.sleep(0.2)
 while True:
 		ret, frame = cap.read()
 		if ret is None:
@@ -71,11 +69,12 @@ while True:
 		angle = stabilize(angle, pot_angle, len(lane_lines))
 		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
 
-		right, left = pwm(BASE_SPEED, angle - 90)
+		left, right = pwm(BASE_SPEED, angle - 90)
 
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
 		move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
+
 
 		show("original", frame, SHOW_IMAGES)
 		show("lines", result, SHOW_IMAGES)
