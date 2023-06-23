@@ -9,8 +9,9 @@ def show(window_name, frame, show_img):
 		cv2.imshow(window_name, frame)
 
 def roi(image):
-	cropped_img = image[image.shape[1] // 2 : image.shape[0] // 1]
-	return cropped_img, cropped_img.shape[1], cropped_img.shape[0]
+	#cropped_img = image[image.shape[1] // 2 : image.shape[0] // 1]
+	#return cropped_img, cropped_img.shape[1], cropped_img.shape[0]
+	return image, image.shape[1], image.shape[0]
 
 def add_to_mask(lines, mask_shape):
 	mask = np.zeros(mask_shape, dtype=np.uint8)
@@ -79,7 +80,7 @@ def calc_lines(frame, line_segments, height, width):
 def calc_steering(frame, lane_lines):
 	if len(lane_lines) == 0:
 		print('INFO: No lines detected...')
-		return -90
+		return 90 # used to be -90, not sure
 
 	height, width, _ = frame.shape
 	if len(lane_lines) == 1:

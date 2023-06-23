@@ -19,9 +19,9 @@ from tools import ( roi,
 					heading,
 					pred_squares )
 
-VIDEO_SOURCE = 0
+VIDEO_SOURCE = 4
 BASE_SPEED = 10
-SHOW_IMAGES = False
+SHOW_IMAGES = True
 
 def segments(img_input, score_thr, dist_thr):
 	try:
@@ -62,7 +62,7 @@ while True:
 			exit()
 
 		cropped, CROPPED_W, CROPPED_H = roi(frame)
-		result, pot_lines = segments(frame, 0.13, 20) # used to be 0.1, configures model sensitivity
+		result, pot_lines = segments(cropped, 0.13, 20) # used to be 0.1, configures model sensitivity
 		pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
 		lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
 		pot_angle = calc_steering(cropped, lane_lines)
@@ -88,7 +88,7 @@ while True:
 				off()
 			exit()
 
-	except KeyboardInterrupt:
+	except:
 		print("Keyboard Interrupt!")
-		off()
+		off() if DRIVER_INITIALIZED else 0
 		exit()
