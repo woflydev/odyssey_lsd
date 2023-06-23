@@ -1,7 +1,7 @@
 import cv2
 import argparse
 import tensorflow as tf
-import time
+import car_client
 try:
 	from utils.motor_lib.driver import move, off
 	DRIVER_INITIALIZED = True
@@ -74,7 +74,6 @@ while True:
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
 		move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
-
 
 		show("original", frame, SHOW_IMAGES)
 		show("lines", result, SHOW_IMAGES)
