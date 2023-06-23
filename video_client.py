@@ -3,15 +3,33 @@ import numpy as np
 import socket
 import pickle
 import struct
+import time
 
 SERVER_IP = '192.168.0.156'
+PORT = '6969'
+
+####################################################################################################
+
+def send(server_ip=SERVER_IP, port=PORT, values=(0, 0)):
+	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+		sock.connect((server_ip, port))
+		sock.sendall(bytes(f"{values}", "utf-8"))
+		received = str(sock.recv(1024), "utf-8")
+
+	print("\nREQUEST:   {}".format(values))
+	print("RESPONSE:  {}".format(received))
+
+	time.sleep(0.005)
+
+####################################################################################################
 
 print("INITIALIZING CAMERA...")
 cap = cv2.VideoCapture(0)
 
 try:
+	print("ATTEMPTING TO CONNECT TO SERVER AT " + SERVER_IP + ":" + PORT + "...")
 	clientsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-	clientsocket.connect((SERVER_IP, 8089))
+	clientsocket.connect((SERVER_IP, PORT))
 	print("CONNECTION ESTABLISHED!")
 except:
 	print("CONNECTION DROPPED!")
@@ -25,5 +43,5 @@ while True:
 		break
 	
 	data = pickle.dumps(frame)
-	message_size = struct.pack("L", len(data)) ### CHANGED
+	message_size = struct.pack("L", len(data))
 	clientsocket.sendall(message_size + data)

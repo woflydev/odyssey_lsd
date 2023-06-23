@@ -3,7 +3,7 @@ import sys
 import random
 import time
 
-HOST, PORT = "127.0.0.1", 6969
+HOST, PORT = '127.0.0.1', '6969'
 
 def send(host=HOST, port=PORT, values=(0, 0)):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
