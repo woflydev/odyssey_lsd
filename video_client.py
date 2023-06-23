@@ -8,7 +8,7 @@ import time
 ####################################################################################################
 
 SERVER_IP = '192.168.0.156'
-PORT = '6969'
+PORT = 6969
 
 ####################################################################################################
 
@@ -30,7 +30,7 @@ print("INITIALIZING CAMERA...")
 cap = cv2.VideoCapture(0)
 
 try:
-	print("ATTEMPTING TO CONNECT TO SERVER AT " + SERVER_IP + ":" + PORT + "...")
+	print("ATTEMPTING TO CONNECT TO SERVER AT " + SERVER_IP + ":" + str(PORT) + "...")
 	clientsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 	clientsocket.connect((SERVER_IP, PORT))
 	print("CONNECTION ESTABLISHED!")

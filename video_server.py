@@ -1,28 +1,67 @@
+from socketserver import BaseServer
 import struct
 import socket
 import cv2
 import pickle
+import threading
+import socketserver
 
 ####################################################################################################
 
 HOST = '0.0.0.0'
-PORT = '6969'
+PWM_PORT = 6969
+VIDEO_PORT = 6970
 
 ####################################################################################################
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((HOST, PORT))
-s.listen(10)
-conn, addr = s.accept()
+class TCPHandler(socketserver.BaseRequestHandler):
+	socketserver.TCPServer.allow_reuse_address = True
+	def __init__(self):
+		self.left = 0
+		self.right = 0
+	
+	def handle(self):
+		self.data = format(self.request.recv(1024).strip().decode())
+		self.request.sendall(b"HANDSHAKE OK!")
 
-data = b''
-payload_size = struct.calcsize("L")
+		split_data = self.data.split(" ")
+		self.left = int(float(split_data[0]))
+		self.right = int(float(split_data[1]))
 
-print('VIDEO SERVER INITIALIZED - AWAITING CONNECTIONS AT ' + HOST + ':' + str(PORT))
+		print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {(self.left, self.right)}")
+
+def get_ip():
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	s.settimeout(0)
+	try:
+		# doesn't even have to be reachable
+		s.connect(('10.254.254.254', 1))
+		ip = s.getsockname()[0]
+	except Exception:
+			ip = '127.0.0.1'
+	finally:
+			s.close()
+	return ip
+
+if __name__ == "__main__":
+	print("HOST IP: " + get_ip())
+	
+	pwm_server = socketserver.TCPServer((HOST, PWM_PORT), TCPHandler)
+	threading.Thread(target=pwm_server.serve_forever).start()
+	print(f"PWM SERVER INITIALIZED - AWAITING CONNECTIONS AT {HOST}:{PWM_PORT}")
+
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.bind((HOST, VIDEO_PORT))
+	s.listen(10)
+	data = b''
+	payload_size = struct.calcsize("L")
+	
+	print(f"VIDEO SERVER INITIALIZED - AWAITING CONNECTIONS AT {HOST}:{VIDEO_PORT}")
+	conn, addr = s.accept() # blocking function
 
 ####################################################################################################
 
-while True:
+	while True:
 		while len(data) < payload_size:
 			data += conn.recv(4096)
 
@@ -31,7 +70,7 @@ while True:
 		msg_size = struct.unpack("L", packed_msg_size)[0]
 
 		while len(data) < msg_size:
-				data += conn.recv(4096)
+			data += conn.recv(4096)
 
 		frame_data = data[:msg_size]
 		data = data[msg_size:]
@@ -42,5 +81,7 @@ while True:
 		
 		if cv2.waitkey(1) & 0xFF == ord('q'):
 			break
-		
+
+	exit()
+
 ####################################################################################################
