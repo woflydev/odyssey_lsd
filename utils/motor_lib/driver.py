@@ -32,9 +32,9 @@ def exit_handler(signal, frame):
     print("Cleaning up...")  
     print("Done.")  
     board.exit()
-    sys.exit(0)
+    #sys.exit(0)
 
-signal.signal(signal.SIGINT, exit_handler)
+#signal.signal(signal.SIGINT, exit_handler)
 
 board = Arduino(SERIAL_PORT)
 print("Communication Successfully started")

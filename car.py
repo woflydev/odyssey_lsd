@@ -1,8 +1,9 @@
 import cv2
 import argparse
 import tensorflow as tf
+import signal
 try:
-	from utils.motor_lib.driver import move, off, drivePin
+	from utils.motor_lib.driver import move, off, exit_handler
 	DRIVER_INITIALIZED = True
 except:
 	print("FAILED TO INITIALIZE. RUNNING ANYWAY!")
@@ -19,8 +20,8 @@ from tools import ( roi,
 					pred_squares )
 
 VIDEO_SOURCE = 0
-BASE_SPEED = 80
-SHOW_IMAGES = True
+BASE_SPEED = 10
+SHOW_IMAGES = False
 
 def segments(img_input, score_thr, dist_thr):
 	try:
@@ -54,34 +55,40 @@ IMAGE_H = int(cap.get(4))  # float `height`
 
 angle = 0
 while True:
-	ret, frame = cap.read()
-	if ret is None:
-		print("no camera feed detected!")
+	try:
+		ret, frame = cap.read()
+		if ret is None:
+			print("no camera feed detected!")
+			exit()
+
+		cropped, CROPPED_W, CROPPED_H = roi(frame)
+		result, pot_lines = segments(frame, 0.13, 20) # used to be 0.1, configures model sensitivity
+		pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
+		lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
+		pot_angle = calc_steering(cropped, lane_lines)
+		angle = stabilize(angle, pot_angle, len(lane_lines))
+		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
+
+		left, right = pwm(BASE_SPEED, angle)
+
+		print(f"Motor Left: {left}, Motor Right: {right}")
+
+		#move(left, right) if DRIVER_INITIALIZED else return 0 # if motor driver is enabled, drive
+
+		show("original", frame, SHOW_IMAGES)
+		show("lines", result, SHOW_IMAGES)
+		show("line mask", pot_line_mask, SHOW_IMAGES)
+		show("preview", preview, SHOW_IMAGES)
+
+		cv2.imwrite("steer.test.png", preview)
+
+		if cv2.waitKey(1) & 0xFF == ord('q'):
+			if DRIVER_INITIALIZED:
+				signal.signal(signal.SIGINT, exit_handler)
+				off()
+			exit()
+
+	except KeyboardInterrupt:
+		print("Keyboard Interrupt!")
+		off()
 		exit()
-
-	cropped, CROPPED_W, CROPPED_H = roi(frame)
-	result, pot_lines = segments(cropped, 0.13, 20) # used to be 0.1, configures model sensitivity
-	pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
-	lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
-	pot_angle = calc_steering(cropped, lane_lines)
-	angle = stabilize(angle, pot_angle, len(lane_lines))
-	preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
-
-	left, right = pwm(BASE_SPEED, angle - 90)
-
-	# new drivers do not support backwards
-	left = 0 if left < 0 else left
-	right = 0 if right < 0 else right
-
-	print(f"Motor Left: {left}, Motor Right: {right}")
-
-	move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
-
-	show("original", frame, SHOW_IMAGES)
-	show("lines", result, SHOW_IMAGES)
-	show("line mask", pot_line_mask, SHOW_IMAGES)
-	show("preview", preview, SHOW_IMAGES)
-
-	if cv2.waitKey(1) & 0xFF == ord('q'):
-		off() if DRIVER_INITIALIZED else 0
-		break
