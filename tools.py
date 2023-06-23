@@ -10,8 +10,13 @@ def show(window_name, frame, show_img):
 
 def roi(image):
 	#cropped_img = image[image.shape[1] // 2 : image.shape[0] // 1]
-	#return cropped_img, cropped_img.shape[1], cropped_img.shape[0]
-	return image, image.shape[1], image.shape[0]
+	height, width = image.shape[:2]
+	print(height, width)
+	start_row, start_col = int(height * .5), int(0)
+	end_row, end_col = int(height), int(width)
+	cropped_img = image[start_row : end_row , start_col : end_col]
+	return cropped_img, height, width
+	#return image, image.shape[1], image.shape[0]
 
 def add_to_mask(lines, mask_shape):
 	mask = np.zeros(mask_shape, dtype=np.uint8)
@@ -36,7 +41,7 @@ def calc_lines(frame, line_segments, height, width):
 	left_fit = []
 	right_fit = []
 
-	boundary = 1/3
+	boundary = 1 / 3
 	left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 2/3 of the screen
 	right_region_boundary = width * boundary # right lane line segment should be on left 2/3 of the screen
 
@@ -71,8 +76,8 @@ def calc_lines(frame, line_segments, height, width):
 				theta = np.arctan2(p1[1]-p2[1], p1[0]-p2[0])
 				endpt_x = int(p1[0] - (width-560)*np.cos(theta))
 				endpt_y = int(p1[1] - (width-560)*np.sin(theta))
-				cv2.line(line_image, (p1[0], p1[1]), (endpt_x, endpt_y), (0, 255, 0), 10)
-				#cv2.line(line_image, (x1, y1), (x2, y2), (0, 255, 0), 10)
+				#cv2.line(line_image, (p1[0], p1[1]), (endpt_x, endpt_y), (0, 255, 0), 10)
+				cv2.line(line_image, (x1, y1), (x2, y2), (0, 255, 0), 10)
 	line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
 
 	return line_image, lane_lines

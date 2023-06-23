@@ -2,6 +2,7 @@ import cv2
 import argparse
 import tensorflow as tf
 import signal
+import time
 try:
 	from utils.motor_lib.driver import move, off, exit_handler
 	DRIVER_INITIALIZED = True
@@ -20,7 +21,7 @@ from tools import ( roi,
 					pred_squares )
 
 VIDEO_SOURCE = 4
-BASE_SPEED = 40
+BASE_SPEED = 60
 SHOW_IMAGES = True
 
 def segments(img_input, score_thr, dist_thr):
@@ -54,14 +55,16 @@ IMAGE_W  = int(cap.get(3))  # float `width`
 IMAGE_H = int(cap.get(4))  # float `height`
 
 angle = 90
+print("Starting...")
+move(80, 80)
+time.sleep(0.2)
 while True:
-	try:
 		ret, frame = cap.read()
 		if ret is None:
 			print("no camera feed detected!")
 			exit()
 
-		cropped, CROPPED_W, CROPPED_H = roi(frame)
+		cropped, CROPPED_H, CROPPED_W = roi(frame)
 		result, pot_lines = segments(cropped, 0.13, 20) # used to be 0.1, configures model sensitivity
 		pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
 		lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
@@ -69,7 +72,7 @@ while True:
 		angle = stabilize(angle, pot_angle, len(lane_lines))
 		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
 
-		left, right = pwm(BASE_SPEED, angle - 90)
+		right, left = pwm(BASE_SPEED, angle - 90)
 
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
@@ -87,8 +90,3 @@ while True:
 				signal.signal(signal.SIGINT, exit_handler)
 				off()
 			exit()
-
-	except:
-		print("Keyboard Interrupt!")
-		off() if DRIVER_INITIALIZED else 0
-		exit()
