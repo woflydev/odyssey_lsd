@@ -5,12 +5,15 @@ import pickle
 import struct
 import time
 
+####################################################################################################
+
 SERVER_IP = '192.168.0.156'
 PORT = '6969'
 
 ####################################################################################################
 
-def send(server_ip=SERVER_IP, port=PORT, values=(0, 0)):
+def send(server_ip=SERVER_IP, port=PORT):
+	values = "req_pwm"
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 		sock.connect((server_ip, port))
 		sock.sendall(bytes(f"{values}", "utf-8"))
@@ -19,7 +22,7 @@ def send(server_ip=SERVER_IP, port=PORT, values=(0, 0)):
 	print("\nREQUEST:   {}".format(values))
 	print("RESPONSE:  {}".format(received))
 
-	time.sleep(0.005)
+	time.sleep(0.003)
 
 ####################################################################################################
 
@@ -45,3 +48,5 @@ while True:
 	data = pickle.dumps(frame)
 	message_size = struct.pack("L", len(data))
 	clientsocket.sendall(message_size + data)
+	
+####################################################################################################

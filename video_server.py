@@ -3,8 +3,12 @@ import socket
 import cv2
 import pickle
 
+####################################################################################################
+
 HOST = '0.0.0.0'
-PORT = 8089
+PORT = '6969'
+
+####################################################################################################
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
@@ -16,9 +20,11 @@ payload_size = struct.calcsize("L")
 
 print('VIDEO SERVER INITIALIZED - AWAITING CONNECTIONS AT ' + HOST + ':' + str(PORT))
 
+####################################################################################################
+
 while True:
 		while len(data) < payload_size:
-				data += conn.recv(4096)
+			data += conn.recv(4096)
 
 		packed_msg_size = data[:payload_size]
 		data = data[payload_size:]
@@ -36,3 +42,5 @@ while True:
 		
 		if cv2.waitkey(1) & 0xFF == ord('q'):
 			break
+		
+####################################################################################################
