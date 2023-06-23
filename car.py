@@ -71,7 +71,7 @@ while True:
 		angle = stabilize(angle, pot_angle, len(lane_lines))
 		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
 
-		left, right = pwm(BASE_SPEED, angle - 90)
+		right, left = pwm(BASE_SPEED, angle - 90)
 
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
