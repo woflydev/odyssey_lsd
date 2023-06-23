@@ -20,8 +20,12 @@ def request_pwm(sock, videosocket, frame, values):
 	videosocket.sendall(message_size + export_frame)
 
 	sock.sendall(bytes(values, "utf-8"))
-
-	received = str(sock.recv(1024), "utf-8")
+	
+	try:
+		received = str(sock.recv(1024), "utf-8")
+	except:
+		print("CONNECTION DROPPED!")
+		exit()
 
 	print(f"\nREQUEST:   {format(values)}", )
 	print(f"RESPONSE:  {format(received)}")
@@ -62,10 +66,7 @@ while True:
 
 	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	pwmsocket.connect((SERVER_IP, PWM_PORT))
-	#videosocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	#videosocket.connect((SERVER_IP, VIDEO_PORT))
 	pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
 	pwmsocket.close()
-	#videosocket.close()
 
 ####################################################################################################

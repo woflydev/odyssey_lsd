@@ -29,12 +29,12 @@ class TCPHandler(socketserver.BaseRequestHandler):
 	def handle(self):
 		self.data = format(self.request.recv(1024).strip().decode())
 
+		export = f"{left} {right}"
+		
+		self.request.sendall(bytes(export, "utf-8"))
+		
 		print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {self.data}")
-		
-		fake_data = f"{random.randint(0, 100)} {random.randint(0, 100)}"
-		self.request.sendall(bytes(fake_data, "utf-8"))
-		
-		print(f"\nSENT TO CLIENT {format(self.client_address[0])}: {fake_data}")
+		print(f"SENT TO CLIENT {format(self.client_address[0])}: {export}")
 
 def get_ip():
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -49,7 +49,7 @@ def get_ip():
 			s.close()
 	return ip
 
-def exit_handler(signum, frame):
+def exit_handler(signal, frame):
 	msg = "KEYBOARD INTERRUPT!"
 	print(msg, end="", flush=True)
 	cv2.destroyAllWindows()
@@ -75,7 +75,22 @@ if __name__ == "__main__":
 
 	signal.signal(signal.SIGINT, exit_handler)
 
+	stop = False
 	while True:
+		if not stop:
+			left = random.randint(0, 100)
+			right = random.randint(0, 100)
+		
+		if cv2.waitKey(1) & 0xFF == 32:
+			left = 0
+			right = 0
+			stop = not stop
+		
+		if cv2.waitKey(1) & 0xFF == ord("q"):
+			print("\nSERVER COMPLETED GRACEFUL SHUTDOWN!")
+			cv2.destroyAllWindows()
+			break
+		
 		while len(video_data) < video_payload_size:
 			video_data += conn.recv(4096)
 
