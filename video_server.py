@@ -6,6 +6,8 @@ import pickle
 import threading
 import socketserver
 import signal
+import numpy as np
+import random
 
 ####################################################################################################
 
@@ -26,11 +28,11 @@ class TCPHandler(socketserver.BaseRequestHandler):
 
 	def handle(self):
 		self.data = format(self.request.recv(1024).strip().decode())
-		
-		if self.data == "req_pwm":
-			self.request.sendall(b"HANDSHAKE OK!")
 
 		print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {self.data}")
+		
+		fake_data = f"{random.randint(0, 100)} {random.randint(0, 100)}"
+		self.request.sendall(bytes(fake_data, "utf-8"))
 
 def get_ip():
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -60,34 +62,34 @@ if __name__ == "__main__":
 	pwm_thread = threading.Thread(target=pwm_server.serve_forever, daemon=True).start()
 	print(f"PWM SERVER INITIALIZED - AWAITING CONNECTIONS AT {get_ip()}:{PWM_PORT}")
 
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind((HOST, VIDEO_PORT))
-	s.listen(10)
+	video_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	video_server.bind((HOST, VIDEO_PORT))
+	video_server.listen(10)
 	
 	print(f"VIDEO SERVER INITIALIZED - AWAITING CONNECTIONS AT {get_ip()}:{VIDEO_PORT}")
-	conn, addr = s.accept() # blocking function
+	conn, addr = video_server.accept() # blocking function
 
 ####################################################################################################
 
 	signal.signal(signal.SIGINT, exit_handler)
 
 	while True:
-		while len(video_data) < video_payload_size:
-			video_data += conn.recv(4096)
+			while len(video_data) < video_payload_size:
+				video_data += conn.recv(4096)
 
-		packed_msg_size = video_data[:video_payload_size]
-		video_data = video_data[video_payload_size:]
-		msg_size = struct.unpack("L", packed_msg_size)[0]
+			packed_msg_size = video_data[:video_payload_size]
+			video_data = video_data[video_payload_size:]
+			msg_size = struct.unpack("L", packed_msg_size)[0]
 
-		while len(video_data) < msg_size:
-			video_data += conn.recv(4096)
+			while len(video_data) < msg_size:
+				video_data += conn.recv(4096)
 
-		frame_data = video_data[:msg_size]
-		video_data = video_data[msg_size:]
-		
-		frame = pickle.loads(frame_data)
-
-		cv2.imshow('frame', frame)
-		cv2.waitKey(1) # this is required for some reason
+			frame_data = video_data[:msg_size]
+			video_data = video_data[msg_size:]
+			
+			frame = pickle.loads(frame_data)
+			
+			cv2.imshow('frame', frame)
+			cv2.waitKey(1) # this is required for some reason
 
 ####################################################################################################

@@ -1,19 +1,15 @@
 import socketserver
-from utils.motor_lib.driver import move
+import random
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
 	socketserver.TCPServer.allow_reuse_address = True
 	def handle(self):
 		self.data = format(self.request.recv(1024).strip().decode())
-		self.request.sendall(b"HANDSHAKE OK!")
 
-		split_data = self.data.split(" ")
-		left = int(float(split_data[0]))
-		right = int(float(split_data[1]))
-
-		print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {(left, right)}")
-
-		move(left, right)
+		print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {self.data}")
+		
+		fake_data = f"{random.randint(0, 100)} {random.randint(0, 100)}"
+		self.request.sendall(bytes(fake_data, "utf-8"))
 
 if __name__ == "__main__":
 	HOST, PORT = "0.0.0.0", 6969
