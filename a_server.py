@@ -8,12 +8,16 @@ import socketserver
 import signal
 import numpy as np
 import random
+from a_pipeline import pipeline
+from tools import pwm
 
 ####################################################################################################
 
 HOST = '0.0.0.0'
 PWM_PORT = 6969
 VIDEO_PORT = 6970
+
+BASE_SPEED = 30
 
 ####################################################################################################
 
@@ -76,16 +80,8 @@ if __name__ == "__main__":
 	signal.signal(signal.SIGINT, exit_handler)
 
 	stop = False
+	angle = 90
 	while True:
-		if not stop:
-			left = random.randint(0, 100)
-			right = random.randint(0, 100)
-		
-		if cv2.waitKey(1) & 0xFF == 32:
-			left = 0
-			right = 0
-			stop = not stop
-		
 		if cv2.waitKey(1) & 0xFF == ord("q"):
 			print("\nSERVER COMPLETED GRACEFUL SHUTDOWN!")
 			cv2.destroyAllWindows()
@@ -105,6 +101,15 @@ if __name__ == "__main__":
 		video_data = video_data[msg_size:]
 		
 		frame = pickle.loads(frame_data)
+		
+		angle = pipeline(frame, angle, SHOW_IMAGES=True)
+		left, right = pwm(BASE_SPEED, angle - 90)
+		print(f"Motor Left: {left}, Motor Right: {right}")
+
+		if cv2.waitKey(1) & 0xFF == 32:
+			left = 0
+			right = 0
+			stop = not stop
 		
 		cv2.imshow('frame', frame)
 		cv2.waitKey(1) # this is required for some reason
