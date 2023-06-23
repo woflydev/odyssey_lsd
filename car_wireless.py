@@ -1,4 +1,5 @@
 import socketserver
+from utils.motor_lib.driver import move, off
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     socketserver.TCPServer.allow_reuse_address = True
@@ -7,6 +8,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             self.data = format(self.request.recv(1024).strip().decode())
             print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {self.data}")
             self.request.sendall(b"HANDSHAKE OK!")
+
+            move(self.data[0], self.data[1])
         except:
             self.request.sendall(b"INTERNAL SERVER ERROR!")
             print("INTERNAL SERVER ERROR!")

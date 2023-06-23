@@ -5,11 +5,10 @@ import time
 
 HOST, PORT = "127.0.0.1", 6969
 
-while True:
+def send(values):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         # Connect to server and send data
         sock.connect((HOST, PORT))
-        values = (random.randint(0, 100), random.randint(0, 100))
         sock.sendall(bytes(f"{values}", "utf-8"))
 
         # Receive data from the server and shut down
