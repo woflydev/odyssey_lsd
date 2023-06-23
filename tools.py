@@ -9,14 +9,12 @@ def show(window_name, frame, show_img):
 		cv2.imshow(window_name, frame)
 
 def roi(image):
-	#cropped_img = image[image.shape[1] // 2 : image.shape[0] // 1]
 	height, width = image.shape[:2]
-	print(height, width)
 	start_row, start_col = int(height * .5), int(0)
 	end_row, end_col = int(height), int(width)
 	cropped_img = image[start_row : end_row , start_col : end_col]
-	#return cropped_img, height, width
-	return image, image.shape[1], image.shape[0]
+	return cropped_img, height, width
+	#return image, image.shape[1], image.shape[0]
 
 def add_to_mask(lines, mask_shape):
 	mask = np.zeros(mask_shape, dtype=np.uint8)
