@@ -14,19 +14,19 @@ VIDEO_PORT = 6970
 
 ####################################################################################################
 
+left = 0
+right = 0
+
 class TCPHandler(socketserver.BaseRequestHandler):
 	socketserver.TCPServer.allow_reuse_address = True
-	def __init__(self):
-		self.left = 0
-		self.right = 0
-	
+
 	def handle(self):
 		self.data = format(self.request.recv(1024).strip().decode())
 		self.request.sendall(b"HANDSHAKE OK!")
 
 		split_data = self.data.split(" ")
-		self.left = int(float(split_data[0]))
-		self.right = int(float(split_data[1]))
+		left = int(float(split_data[0]))
+		right = int(float(split_data[1]))
 
 		print(f"\nRECEIVED FROM CLIENT {format(self.client_address[0])}: {(self.left, self.right)}")
 
@@ -42,6 +42,8 @@ def get_ip():
 	finally:
 			s.close()
 	return ip
+
+####################################################################################################
 
 if __name__ == "__main__":
 	print("HOST IP: " + get_ip())
