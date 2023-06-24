@@ -11,6 +11,7 @@ import signal
 SERVER_IP = 'localhost'
 PWM_PORT = 6969
 VIDEO_PORT = 6970
+CAPTURE_INTERVAL = .1 # in seconds
 
 ####################################################################################################
 
@@ -44,6 +45,9 @@ signal.signal(signal.SIGINT, exit_handler)
 
 print("INITIALIZING CAMERA...")
 cap = cv2.VideoCapture(0)
+fps = cap.get(cv2.CAP_PROP_FPS)
+multi = fps * CAPTURE_INTERVAL
+frame_id = 0
 
 try:
 	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,15 +62,20 @@ except:
 	exit()
 
 while True:
+	frame_id += 1
 	ret, frame = cap.read()
 	
 	if ret == False:
 		print("NO VIDEO FEED FOUND!")
+		cap.release()
 		break
 
-	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	pwmsocket.connect((SERVER_IP, PWM_PORT))
-	pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
-	pwmsocket.close()
+	if frame_id % multi == 0:
+		pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		pwmsocket.connect((SERVER_IP, PWM_PORT))
+		pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
+		pwmsocket.close()
+	else:
+		print("\nFRAME SKIPPED!")
 
 ####################################################################################################
