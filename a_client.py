@@ -3,6 +3,7 @@ import socket
 import pickle
 import struct
 import signal
+import time
 
 ####################################################################################################
 
@@ -10,8 +11,8 @@ SERVER_IP = 'localhost'
 PWM_PORT = 6969
 VIDEO_PORT = 6970
 
-VIDEO_SOURCE = "C:\\Users\\User\\Desktop\\odyssey_lsd\\data\\TestTrack.mp4"
-CAPTURE_INTERVAL = 1 # in seconds
+VIDEO_SOURCE = 0
+CAPTURE_INTERVAL = 1 # in seconds # not used right now
 
 ####################################################################################################
 
@@ -20,7 +21,8 @@ def request_pwm(sock, videosocket, frame, values):
 	message_size = struct.pack("L", len(export_frame))
 	videosocket.sendall(message_size + export_frame)
 
-	sock.sendall(bytes(values, "utf-8"))
+	#sock.sendall(bytes(values, "utf-8"))
+	sock.sendall(values.encode())
 	
 	try:
 		received = str(sock.recv(1024), "utf-8")
@@ -48,7 +50,8 @@ cap = cv2.VideoCapture(VIDEO_SOURCE)
 fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
 multi = fps * CAPTURE_INTERVAL
 frame_id = 0
-print("CAMERA INITIALIZED! FPS: " + str(fps) + " | MULTIPLIER: " + str(multi) + " | CAPTURE INTERVAL: " + str(CAPTURE_INTERVAL) + "s")
+print("VIDEO SOURCE INITIALIZED! FPS: " + str(fps) + " | MULTIPLIER: " + str(multi) + " | CAPTURE INTERVAL: " + str(CAPTURE_INTERVAL) + "s")
+time.sleep(0.1)
 
 try:
 	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,6 +70,11 @@ while True:
 	ret, frame = cap.read()
 	
 	frame = cv2.resize(frame, (640, 640)) # W, H
+	
+	#pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	#pwmsocket.connect((SERVER_IP, PWM_PORT))
+	#pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
+	#pwmsocket.close()
 	
 	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	pwmsocket.connect((SERVER_IP, PWM_PORT))
