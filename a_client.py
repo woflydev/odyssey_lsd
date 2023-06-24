@@ -4,6 +4,7 @@ import pickle
 import struct
 import signal
 import time
+from utils.motor_lib.driver import move, off
 
 ####################################################################################################
 
@@ -71,15 +72,20 @@ while True:
 	
 	frame = cv2.resize(frame, (640, 640)) # W, H
 	
-	#pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	#pwmsocket.connect((SERVER_IP, PWM_PORT))
-	#pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
-	#pwmsocket.close()
-	
-	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	pwmsocket.connect((SERVER_IP, PWM_PORT))
-	pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
-	pwmsocket.close()
+	try:
+		pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		pwmsocket.connect((SERVER_IP, PWM_PORT))
+		pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
+		pwmsocket.close()
+		
+		left = pwm[0]
+		right = pwm[1]
+		
+		move(left, right)
+	except:
+		print("CONNECTION DROPPED!")
+		off()
+		exit()
 	
 	if ret == False:
 		print("NO VIDEO FEED FOUND!")
