@@ -1,8 +1,6 @@
 import cv2
-import numpy as np
 import socket
 import pickle
-import random
 import struct
 import signal
 
@@ -11,7 +9,9 @@ import signal
 SERVER_IP = 'localhost'
 PWM_PORT = 6969
 VIDEO_PORT = 6970
-CAPTURE_INTERVAL = .1 # in seconds
+
+VIDEO_SOURCE = "C:\\Users\\User\\Desktop\\odyssey_lsd\\data\\TestTrack.mp4"
+CAPTURE_INTERVAL = 1 # in seconds
 
 ####################################################################################################
 
@@ -44,8 +44,9 @@ def exit_handler(signum, frame):
 signal.signal(signal.SIGINT, exit_handler)
 
 print("INITIALIZING CAMERA...")
-cap = cv2.VideoCapture(0)
-fps = cap.get(cv2.CAP_PROP_FPS)
+cap = cv2.VideoCapture(VIDEO_SOURCE)
+fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
+print(fps)
 multi = fps * CAPTURE_INTERVAL
 frame_id = 0
 
@@ -65,17 +66,24 @@ while True:
 	frame_id += 1
 	ret, frame = cap.read()
 	
+	frame = cv2.resize(frame, (640, 640)) # W, H
+	
 	if ret == False:
 		print("NO VIDEO FEED FOUND!")
 		cap.release()
 		break
 
-	if frame_id % multi == 0:
+	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	pwmsocket.connect((SERVER_IP, PWM_PORT))
+	pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
+	pwmsocket.close()
+
+	"""if frame_id % multi == 0:
 		pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		pwmsocket.connect((SERVER_IP, PWM_PORT))
 		pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
 		pwmsocket.close()
 	else:
-		print("\nFRAME SKIPPED!")
+		print("\nFRAME SKIPPED!")"""
 
 ####################################################################################################

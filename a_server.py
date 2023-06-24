@@ -7,7 +7,6 @@ import threading
 import socketserver
 import signal
 import numpy as np
-import random
 from a_pipeline import pipeline
 from tools import pwm
 
@@ -71,7 +70,7 @@ if __name__ == "__main__":
 	video_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	video_server.bind((HOST, VIDEO_PORT))
 	video_server.listen(10)
-	
+
 	print(f"VIDEO SERVER INITIALIZED - AWAITING CONNECTIONS AT {get_ip()}:{VIDEO_PORT}")
 	conn, addr = video_server.accept() # blocking function
 
@@ -111,7 +110,7 @@ if __name__ == "__main__":
 			right = 0
 			stop = not stop
 		
-		cv2.imshow('frame', frame)
+		cv2.imshow("received", frame)
 		cv2.waitKey(1) # this is required for some reason
 
 ####################################################################################################
