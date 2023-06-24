@@ -17,6 +17,7 @@ PWM_PORT = 6969
 VIDEO_PORT = 6970
 
 BASE_SPEED = 30
+MODEL_SENSITIVITY = 0.18 # 0 to 1
 
 ####################################################################################################
 
@@ -101,7 +102,7 @@ if __name__ == "__main__":
 		
 		frame = pickle.loads(frame_data)
 		
-		angle = pipeline(frame, angle, SHOW_IMAGES=True)
+		angle = pipeline(frame, angle, MODEL_SENSITIVITY, SHOW_IMAGES=True)
 		left, right = pwm(BASE_SPEED, angle - 90)
 		print(f"Motor Left: {left}, Motor Right: {right}")
 

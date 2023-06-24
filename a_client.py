@@ -46,9 +46,9 @@ signal.signal(signal.SIGINT, exit_handler)
 print("INITIALIZING CAMERA...")
 cap = cv2.VideoCapture(VIDEO_SOURCE)
 fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
-print(fps)
 multi = fps * CAPTURE_INTERVAL
 frame_id = 0
+print("CAMERA INITIALIZED! FPS: " + str(fps) + " | MULTIPLIER: " + str(multi) + " | CAPTURE INTERVAL: " + str(CAPTURE_INTERVAL) + "s")
 
 try:
 	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,15 +68,15 @@ while True:
 	
 	frame = cv2.resize(frame, (640, 640)) # W, H
 	
-	if ret == False:
-		print("NO VIDEO FEED FOUND!")
-		cap.release()
-		break
-
 	pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	pwmsocket.connect((SERVER_IP, PWM_PORT))
 	pwm = request_pwm(pwmsocket, videosocket, frame, "req_pwm")
 	pwmsocket.close()
+	
+	if ret == False:
+		print("NO VIDEO FEED FOUND!")
+		cap.release()
+		break
 
 	"""if frame_id % multi == 0:
 		pwmsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

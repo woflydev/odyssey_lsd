@@ -27,9 +27,9 @@ def segments(img_input, score_thr, dist_thr):
 
 	return img_output, lines
 
-def pipeline(original_frame, original_angle, SHOW_IMAGES=True):
+def pipeline(original_frame, original_angle, sensitivity, SHOW_IMAGES=True):
 	cropped, CROPPED_H, CROPPED_W = roi(original_frame)
-	result, pot_lines = segments(cropped, 0.13, 20) # used to be 0.1, configures model sensitivity
+	result, pot_lines = segments(cropped, sensitivity, 20) # used to be 0.1, configures model sensitivity
 	pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
 	lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
 	pot_angle = calc_steering(cropped, lane_lines)
