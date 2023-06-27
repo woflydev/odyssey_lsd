@@ -4,7 +4,10 @@ import pickle
 import struct
 import signal
 import time
-from utils.motor_lib.driver import move, off
+try:
+	from utils.motor_lib.driver import move, off
+except:
+	print("MOTOR DRIVER NOT INITIALIZED PROPERLY! RUNNING ANYWAY.")
 
 ####################################################################################################
 
@@ -81,7 +84,7 @@ while True:
 		left = pwm[0]
 		right = pwm[1]
 		
-		move(left, right)
+		#move(left, right)
 	except:
 		print("CONNECTION DROPPED!")
 		off()
