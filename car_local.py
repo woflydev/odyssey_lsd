@@ -21,7 +21,7 @@ from tools import ( roi,
 
 VIDEO_SOURCE = 0
 BASE_SPEED = 30
-SHOW_IMAGES = True
+SHOW_IMAGES = False
 
 def segments(img_input, score_thr, dist_thr):
 	try:
@@ -71,6 +71,9 @@ while True:
 
 		left, right = pwm(BASE_SPEED, angle - 90)
 
+		left = 0 if left < 0 else left
+		right = 0 if left < 0 else right
+
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
 		move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
@@ -81,6 +84,7 @@ while True:
 		show("preview", preview, SHOW_IMAGES)
 
 		cv2.imwrite("steer.test.png", preview)
+		cv2.imwrite("mask.test.png", pot_line_mask)
 
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			if DRIVER_INITIALIZED:
