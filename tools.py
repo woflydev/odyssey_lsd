@@ -13,11 +13,12 @@ def roi(image):
 	start_row, start_col = int(height * .5), int(0)
 	end_row, end_col = int(height), int(width)
 	cropped_img = image[start_row : end_row , start_col : end_col]
-	return cropped_img, height, width
+	return cropped_img, cropped_img.shape[0], cropped_img.shape[1]
+	#return cropped_img, height, width
 	#return image, image.shape[1], image.shape[0]
 
 def add_to_mask(lines, mask_shape):
-	mask = np.zeros(mask_shape, dtype=np.uint8)
+	mask = np.zeros((180, 640), dtype=np.uint8)
 	mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
 
 	for line in lines:

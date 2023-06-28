@@ -1,7 +1,7 @@
 import cv2
 import argparse
 import tensorflow as tf
-import car_client
+
 try:
 	from utils.motor_lib.driver import move, off
 	DRIVER_INITIALIZED = True
@@ -62,12 +62,12 @@ while True:
 			exit()
 
 		cropped, CROPPED_H, CROPPED_W = roi(frame)
-		result, pot_lines = segments(cropped, 0.13, 20) # used to be 0.1, configures model sensitivity
+		result, pot_lines = segments(cropped, 0.27, 20) # used to be 0.1, configures model sensitivity
 		pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
 		lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
 		pot_angle = calc_steering(cropped, lane_lines)
 		angle = stabilize(angle, pot_angle, len(lane_lines))
-		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W)
+		preview = heading(lane_frame, angle, CROPPED_H, CROPPED_W) #change back to angle, same with below
 
 		left, right = pwm(BASE_SPEED, angle - 90)
 

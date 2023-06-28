@@ -8,29 +8,29 @@ from utils.motor_lib.driver import move, off
 
 ####################################################################################################
 
-SERVER_IP = 'localhost'
+SERVER_IP = '192.168.171.34'
 PWM_PORT = 6969
 VIDEO_PORT = 6970
 
 VIDEO_SOURCE = 0
-CAPTURE_INTERVAL = 1 # in seconds # not used right now
+CAPTURE_INTERVAL = 0 # in seconds # not used right now
 
 ####################################################################################################
 
 def request_pwm(sock, videosocket, frame, values):
-	export_frame = pickle.dumps(frame)
+	export_frame = pickle.dumps(frame, protocol=pickle.HIGHEST_PROTOCOL)
 	message_size = struct.pack("L", len(export_frame))
 	videosocket.sendall(message_size + export_frame)
 
 	#sock.sendall(bytes(values, "utf-8"))
 	sock.sendall(values.encode())
-	
-	try:
+	received = str(sock.recv(1024), "utf-8")
+	"""try:
 		received = str(sock.recv(1024), "utf-8")
 	except:
 		print("CONNECTION DROPPED!")
 		exit()
-
+"""
 	print(f"\nREQUEST:   {format(values)}", )
 	print(f"RESPONSE:  {format(received)}")
 
