@@ -17,6 +17,11 @@ def roi(image):
 	#return cropped_img, height, width
 	#return image, image.shape[1], image.shape[0]
 
+def hsv(frame, lower, upper):
+	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+	masked = cv2.inRange(hsv, lower, upper)
+	return masked
+
 def add_to_mask(lines, mask_shape):
 	mask = np.zeros((180, 640), dtype=np.uint8)
 	mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
@@ -108,7 +113,7 @@ def calc_steering(frame, lane_lines):
 	#print('DEBUG: new steering angle: %s' % steering_angle)
 	return steering_angle
 
-def stabilize(current, new, num_lanes, max_confident_deviation=5, max_unsure_deviation=1):
+def stabilize(current, new, num_lanes, max_confident_deviation=8, max_unsure_deviation=4):
 	"""
 	Using last steering angle to stabilize the steering angle
 	This can be improved to use last N angles, etc
@@ -120,8 +125,10 @@ def stabilize(current, new, num_lanes, max_confident_deviation=5, max_unsure_dev
 	elif num_lanes == 1:
 		# if only one lane detected, don't deviate too much
 		max_angle_deviation = max_unsure_deviation
-	elif num_lanes == 0:
-		max_angle_deviation = 100
+	else:
+		max_angle_deviation = 2
+	#elif num_lanes == 0:
+		#max_angle_deviation = 100
 	
 	angle_deviation = new - current
 	if abs(angle_deviation) > max_angle_deviation:

@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 import argparse
 import tensorflow as tf
 
@@ -9,6 +10,7 @@ except:
 	print("FAILED TO INITIALIZE. RUNNING ANYWAY!")
 	DRIVER_INITIALIZED = False
 from tools import ( roi,
+		   		hsv,
 		   			pwm,
 					show,
 		   			pred_lines,
@@ -22,6 +24,9 @@ from tools import ( roi,
 VIDEO_SOURCE = 0
 BASE_SPEED = 30
 SHOW_IMAGES = False
+
+LOWER_MASK = np.array([0, 62, 0], np.uint8)
+UPPER_MASK = np.array([179, 255, 124], np.uint8)
 
 def segments(img_input, score_thr, dist_thr):
 	try:
@@ -39,7 +44,7 @@ def segments(img_input, score_thr, dist_thr):
 	return img_output, lines
 
 parser = argparse.ArgumentParser('project_odyssey')
-parser.add_argument('--model_path', default='tflite_models/M-LSD_320_tiny_fp32.tflite', type=str, help='path to tflite model')
+parser.add_argument('--model_path', default='tflite_models/M-LSD_320_tiny_fp16.tflite', type=str, help='path to tflite model')
 parser.add_argument('--input_size', default=320, type=int, choices=[512, 320], help='input size')
 args = parser.parse_args()
 
@@ -62,7 +67,8 @@ while True:
 			exit()
 
 		cropped, CROPPED_H, CROPPED_W = roi(frame)
-		result, pot_lines = segments(cropped, 0.27, 20) # used to be 0.1, configures model sensitivity
+		masked = hsv(cropped, LOWER_MASK, UPPER_MASK)
+		result, pot_lines = segments(masked, 0.3, 0) # used to be 0.1, configures model sensitivity #idk what the other one does, max is 20
 		pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
 		lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
 		pot_angle = calc_steering(cropped, lane_lines)
@@ -76,7 +82,7 @@ while True:
 
 		print(f"Motor Left: {left}, Motor Right: {right}")
 
-		move(left, right) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
+		move(right, left) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
 
 		show("original", frame, SHOW_IMAGES)
 		show("lines", result, SHOW_IMAGES)
@@ -84,7 +90,7 @@ while True:
 		show("preview", preview, SHOW_IMAGES)
 
 		cv2.imwrite("steer.test.png", preview)
-		cv2.imwrite("mask.test.png", pot_line_mask)
+		cv2.imwrite("mask.test.png", masked)
 
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			if DRIVER_INITIALIZED:
