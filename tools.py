@@ -20,7 +20,8 @@ def roi(image):
 def hsv(frame, lower, upper):
 	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 	masked = cv2.inRange(hsv, lower, upper)
-	return masked
+	subtracted = cv2.bitwise_and(frame, frame, mask=masked)
+	return subtracted
 
 def add_to_mask(lines, mask_shape):
 	mask = np.zeros((180, 640), dtype=np.uint8)
