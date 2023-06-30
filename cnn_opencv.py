@@ -2,12 +2,26 @@ import cv2
 import numpy as np
 import logging
 import math
+import atexit
 import time
 import datetime
 import sys
+import faulthandler
 
-BASE_SPEED = 100
-_SHOW_IMAGE = False
+try:
+	from utils.motor_lib.driver import move, off
+	DRIVER_INITIALIZED = True
+except:
+	print("FAILED TO INITIALIZE. RUNNING ANYWAY!")
+	DRIVER_INITIALIZED = False
+
+faulthandler.enable()
+
+BASE_SPEED = 30
+RATE_LIMIT = False
+RATE_LIMIT_VALUE = 0.08
+
+SHOW_IMAGES = True
 STEP_SIZE = 5 # DEFAULT 5 - the less steps, the more accurate the obstacle detection
 MIN_DISTANCE = 250 # DEFAULT 250 - the distance to consider an obstacle (the larger the number the closer the obstacle is)
 MIN_UTURN_THRESHOLD = 300 # DEFAULT 400 - the distance to consider a u-turn (the larger the number the closer the u-turn has to be)
@@ -38,11 +52,22 @@ class B_OpenCV_Driver(object):
 		new_steering_angle = compute_steering_angle(frame, lane_lines)
 		self.curr_steering_angle = stabilize_steering_angle(self.curr_steering_angle, new_steering_angle, len(lane_lines))
 
-		pwm = throttle_angle_to_thrust(BASE_SPEED, self.curr_steering_angle - 90)
-		#print(f"Left: {pwm[0]}, Right: {pwm[1]}")
+		left, right = pwm(BASE_SPEED, self.curr_steering_angle - 90)
+
+		if left < 0:
+			left = 1
+		if right < 0:
+			right = 1
+		
+		if left > 100:
+			left = 100
+		if right > 100:
+			right = 100
+
+		print(f"Left: {int(left)}, Right: {int(right)}")
 
 		# actually write values to motor
-		#driver.move(pwm[0], pwm[1])
+		move(int(right), int(left)) if DRIVER_INITIALIZED else 0 #motors are wired wrong way around lol
 
 		print(f"Calculated Steering Angle: {self.curr_steering_angle}")
 
@@ -78,24 +103,30 @@ def detect_edges(frame):
 	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 	show_image("hsv", hsv)
 
-	lower_blue = np.array([93, 132, 0])
-	upper_blue = np.array([113, 255, 255])
+	#lower_blue = np.array([93, 132, 0]) # changed this to different colour for home testing
+	#upper_blue = np.array([113, 255, 255])
 
-	lower_yellow = np.array([0, 0, 255])
-	upper_yellow = np.array([53, 76, 255])
+	#lower_yellow = np.array([0, 0, 255])
+	#upper_yellow = np.array([53, 76, 255])
 
-	mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
-	mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
+	LOWER_MASK = np.array([0, 62, 0], np.uint8)
+	UPPER_MASK = np.array([179, 255, 124], np.uint8)
+	mask = cv2.inRange(hsv, LOWER_MASK, UPPER_MASK)
 
-	show_image("blue mask", mask_blue)
-	show_image("yellow mask", mask_yellow)
+	#mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
+	#mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
 
-	combined_mask = cv2.bitwise_or(mask_blue, mask_yellow)
+	#show_image("blue mask", mask_blue)
+	#show_image("yellow mask", mask_yellow)
+	show_image("the thing idk", mask)
+
+	#combined_mask = cv2.bitwise_or(mask_blue, mask_yellow)
 
 	#cv2.imwrite("camera.test.png", combined_mask)
 
 	# detect edges
-	edges = cv2.Canny(combined_mask, 200, 400)
+	#edges = cv2.Canny(combined_mask, 200, 400)
+	edges = cv2.Canny(mask, 200, 400)
 
 	return edges
 
@@ -145,9 +176,9 @@ def detect_line_segments(cropped_edges):
 	# tuning min_threshold, minLineLength, maxLineGap is a trial and error process by hand
 	rho = 1  # precision in pixel, i.e. 1 pixel
 	angle = np.pi / 180  # degree in radian, i.e. 1 degree
-	min_threshold = 10  # minimal of votes
-	line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold, np.array([]), minLineLength=8,
-									maxLineGap=4)
+	min_threshold = 10  # minimal of votes #default 10
+	line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold, np.array([]), minLineLength=10,
+									maxLineGap=2) #minlinelength=8, maxlinegap=4
 
 	if line_segments is not None:
 		for line_segment in line_segments:
@@ -180,7 +211,10 @@ def average_slope_intercept(frame, line_segments):
 			if x1 == x2:
 				logging.info('skipping vertical line segment (slope=inf): %s' % line_segment)
 				continue
-			fit = np.polyfit((x1, x2), (y1, y2), 1)
+			try: # changed
+				fit = np.polyfit((x1, x2), (y1, y2), 1)
+			except np.RankWarning:
+				fit = None
 			slope = fit[0]
 			intercept = fit[1]
 			if slope < 0:
@@ -234,7 +268,7 @@ def compute_steering_angle(frame, lane_lines):
 	return steering_angle
 
 
-def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lane_lines, max_angle_deviation_two_lines=5, max_angle_deviation_one_lane=1):
+def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lane_lines, max_angle_deviation_two_lines=5, max_angle_deviation_one_lane=4):
 	"""
 	Using last steering angle to stabilize the steering angle
 	This can be improved to use last N angles, etc
@@ -260,7 +294,7 @@ def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lan
 ############################
 # Utility Functions
 ############################
-def throttle_angle_to_thrust(speed, theta):
+def pwm(speed, theta):
 	try:
 		theta = ((theta + 180) % 360) - 180  # normalize value to [-180, 180)
 		speed = min(max(0, speed), 100)              # normalize value to [0, 100]
@@ -312,7 +346,7 @@ def length_of_line_segment(line):
 	return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def show_image(title, frame, show=_SHOW_IMAGE):
+def show_image(title, frame, show=SHOW_IMAGES):
 	if show:
 		cv2.imshow(title, frame)
 
@@ -355,6 +389,7 @@ def test_video(video_file):
 	try:
 		i = 0
 		while cap.isOpened():
+			atexit.register(off) if DRIVER_INITIALIZED else 0
 			_, frame = cap.read()
 			print('frame %s' % i )
 			combo_image, currentAngle = lane_follower.follow_lane(frame)
@@ -413,6 +448,8 @@ def test_video(video_file):
 			i += 1
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
+			
+			time.sleep(RATE_LIMIT_VALUE) if RATE_LIMIT else 0
 	finally:
 		cap.release()
 		#video_overlay.release()
@@ -424,6 +461,7 @@ if __name__ == '__main__':
 	#test_photo('/home/pi/DeepPiCar/driver/data/video/car_video_190427_110320_073.png')
 	#test_photo(sys.argv[1])
 	#test_video(gstreamer_pipeline(flip_method=2))
-	test_video(0)
+	test_video(4)
 	#test_video("https://192.168.227.41:8080")
 	#test_video("data/TestTrack.mp4")
+	

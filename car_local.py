@@ -21,9 +21,9 @@ from tools import ( roi,
 					heading,
 					pred_squares )
 
-VIDEO_SOURCE = 0
+VIDEO_SOURCE = 4
 BASE_SPEED = 30
-SHOW_IMAGES = False
+SHOW_IMAGES = True
 
 LOWER_MASK = np.array([0, 62, 0], np.uint8)
 UPPER_MASK = np.array([179, 255, 124], np.uint8)
@@ -67,8 +67,8 @@ while True:
 			exit()
 
 		cropped, CROPPED_H, CROPPED_W = roi(frame)
-		masked = hsv(cropped, LOWER_MASK, UPPER_MASK)
-		result, pot_lines = segments(masked, 0.3, 0) # used to be 0.1, configures model sensitivity #idk what the other one does, max is 20
+		masked, edges = hsv(cropped, LOWER_MASK, UPPER_MASK)
+		result, pot_lines = segments(masked, 0.1, 0) # used to be 0.1, configures model sensitivity #idk what the other one does, max is 20
 		pot_line_mask = add_to_mask(pot_lines, (CROPPED_H, CROPPED_W))
 		lane_frame, lane_lines = calc_lines(cropped, pot_lines, CROPPED_H, CROPPED_W)
 		pot_angle = calc_steering(cropped, lane_lines)
@@ -77,12 +77,12 @@ while True:
 
 		left, right = pwm(BASE_SPEED, angle - 90)
 
-		left = 0 if left < 0 else left
-		right = 0 if left < 0 else right
+		left = 1 if left < 0 else left
+		right = 1 if right < 0 else right
 
-		print(f"Motor Left: {left}, Motor Right: {right}")
+		print(f"Motor Left: {int(left)}, Motor Right: {int(right)}")
 
-		move(right, left) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
+		move(int(right), int(left)) if DRIVER_INITIALIZED else 0 # if motor driver is enabled, drive
 
 		show("original", frame, SHOW_IMAGES)
 		show("lines", result, SHOW_IMAGES)
