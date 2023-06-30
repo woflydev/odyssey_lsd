@@ -17,7 +17,7 @@ except:
 
 faulthandler.enable()
 
-BASE_SPEED = 30
+BASE_SPEED = 20
 RATE_LIMIT = False
 RATE_LIMIT_VALUE = 0.08
 
@@ -54,9 +54,13 @@ class B_OpenCV_Driver(object):
 
 		left, right = pwm(BASE_SPEED, self.curr_steering_angle - 90)
 
+		print(f"Original Calculated PWM: {left, right}")
+
 		if left < 0:
+			print("\nLEFT IS NEGATIVE\n")
 			left = 1
 		if right < 0:
+			print("\nRIGHT IS NEGATIVE\n")
 			right = 1
 		
 		if left > 100:
@@ -67,7 +71,7 @@ class B_OpenCV_Driver(object):
 		print(f"Left: {int(left)}, Right: {int(right)}")
 
 		# actually write values to motor
-		move(int(right), int(left)) if DRIVER_INITIALIZED else 0 #motors are wired wrong way around lol
+		move(int(left), int(right)) if DRIVER_INITIALIZED else 0 #motors are wired wrong way around lol
 
 		print(f"Calculated Steering Angle: {self.curr_steering_angle}")
 

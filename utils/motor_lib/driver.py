@@ -18,7 +18,7 @@ import sys
 
 PWM_FREQ = 3906  # (Hz) max is 1.5 kHz
 
-MAP_CONST = 1 / 120   # 1 / 120 to limit speed below 100% duty cycle
+MAP_CONST = 1 / 150   # 1 / 120 to limit speed below 100% duty cycle
 
 HALF_WIDTH = 0.1          # Half of the width of droid, in metres
 
@@ -272,7 +272,7 @@ def turn(speed: float, radius: float, timeout=0):
 
 # # input -100 to 100 left and right sides
 
-def move(LIN, RIN, timeout=0):
+def move(RIN, LIN, timeout=0):
 
     LIN = round(LIN / 5) * 5
 
@@ -306,7 +306,7 @@ def move(LIN, RIN, timeout=0):
 
             motorPWMLA.write(0)
 
-        if L > 0:
+        if R > 0:
 
             motorPWMRA.write(abs(R))
 
