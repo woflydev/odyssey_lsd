@@ -18,7 +18,7 @@ import sys
 
 PWM_FREQ = 3906  # (Hz) max is 1.5 kHz
 
-MAP_CONST = 1 / 150   # 1 / 120 to limit speed below 100% duty cycle
+MAP_CONST = 1 / 120   # 1 / 120 to limit speed below 100% duty cycle
 
 HALF_WIDTH = 0.1          # Half of the width of droid, in metres
 

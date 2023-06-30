@@ -17,7 +17,7 @@ except:
 
 faulthandler.enable()
 
-BASE_SPEED = 20
+BASE_SPEED = 30
 RATE_LIMIT = False
 RATE_LIMIT_VALUE = 0.08
 
