@@ -3,13 +3,11 @@ import numpy as np
 
 cap = cv2.VideoCapture(0)
 
-roi_width = 200
-roi_height = 50
-roi_offset = 50
-
 line_color = (0, 255, 0)
 outline_color = (0, 0, 255)
 outline_thickness = 2
+rectangle_color = (255, 0, 0)
+rectangle_thickness = 2
 
 lower_mask = np.array([0, 62, 0], np.uint8)
 upper_mask = np.array([179, 255, 124], np.uint8)
@@ -31,13 +29,9 @@ def control_robot(line_position, frame_width):
     control_output = kp * error + ki * integral + kd * derivative
     control_output = np.clip(control_output, -1, 1)
 
-    max_pwm = 100
-    pwm_range = 0.5 * max_pwm
+    steering_angle = 90 + control_output * 45  # Assuming a maximum steering angle of 45 degrees
 
-    pwm_left = int(max_pwm - control_output * pwm_range)
-    pwm_right = int(max_pwm + control_output * pwm_range)
-
-    return pwm_left, pwm_right
+    return steering_angle
 
 while True:
     ret, frame = cap.read()
@@ -59,23 +53,24 @@ while True:
             curve_points = np.squeeze(largest_contour)
             curve_fit = np.polyfit(curve_points[:, 1], curve_points[:, 0], deg=2)
 
-            curve_y = np.linspace(frame.shape[0], frame.shape[0] - roi_height, num=frame.shape[0] - roi_height)
+            curve_y = np.linspace(frame.shape[0], 0, num=frame.shape[0])
             curve_x = np.polyval(curve_fit, curve_y)
             curve_points = np.stack((curve_x.astype(np.int32), curve_y.astype(np.int32)), axis=1)
 
-            # Extrapolate the line beyond the contour points
-            extended_y = np.linspace(frame.shape[0] - roi_height, 0, num=frame.shape[0])
-            extended_x = np.polyval(curve_fit, extended_y)
-            extended_points = np.stack((extended_x.astype(np.int32), extended_y.astype(np.int32)), axis=1)
+            # Draw the line
+            cv2.polylines(line_curve, [curve_points], False, line_color, thickness=2)
 
-            cv2.polylines(line_curve, [extended_points], False, line_color, thickness=10)
+            # Get the bounding rectangle around the line
+            rect_x, rect_y, rect_w, rect_h = cv2.boundingRect(curve_points)
 
-            # Draw the outline around the line
-            cv2.drawContours(line_curve, [extended_points], -1, outline_color, outline_thickness)
+            # Draw the rectangle
+            cv2.rectangle(line_curve, (rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), rectangle_color, rectangle_thickness)
 
-        pwm_left, pwm_right = control_robot(curve_x[0], frame.shape[1])
+            steering_angle = control_robot(rect_x + rect_w / 2, frame.shape[1])
 
-        frame = cv2.addWeighted(frame, 1, line_curve, 0.5, 0)
+            frame = cv2.addWeighted(frame, 1, line_curve, 0.5, 0)
+
+            print(steering_angle)
 
     cv2.imshow("Line Following", frame)
 
@@ -85,6 +80,3 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-
-print("PWM Left:", pwm_left)
-print("PWM Right:", pwm_right)
