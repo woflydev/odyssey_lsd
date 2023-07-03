@@ -11,6 +11,7 @@ roi_offset = 50
 
 # Define the target line color in HSV
 line_color = (0, 255, 0)  # Green
+point_color = (0, 0, 255)  # Red
 
 # Define lower and upper mask values for line color
 lower_mask = np.array([0, 62, 0], np.uint8)
@@ -39,7 +40,7 @@ def control_robot(line_position, frame_width):
     control_output = np.clip(control_output, -1, 1)
 
     # Calculate PWM values for left and right motors
-    max_pwm = 255  # Maximum PWM value
+    max_pwm = 100  # Maximum PWM value
     pwm_range = 0.5 * max_pwm  # Range of PWM values for motor control
 
     pwm_left = int(max_pwm - control_output * pwm_range)
@@ -67,17 +68,29 @@ while True:
         # Find the contour with the largest area
         largest_contour = max(contours, key=cv2.contourArea)
 
-        # Get the bounding rectangle of the contour
-        x, y, w, h = cv2.boundingRect(largest_contour)
+        # Create a blank image for drawing the line curve and points
+        line_curve = np.zeros_like(frame)
+        line_points = np.zeros_like(frame)
 
-        # Calculate the line position as the x-coordinate of the center of the bounding rectangle
-        line_position = x + w / 2
+        # Draw the line curve by fitting a polynomial to the contour points
+        if len(largest_contour) > 2:
+            curve_points = np.squeeze(largest_contour)
+            curve_fit = np.polyfit(curve_points[:, 1], curve_points[:, 0], deg=2)
+            curve_x = np.linspace(0, frame.shape[0], num=frame.shape[0])
+            curve_y = np.polyval(curve_fit, curve_x)
+            curve_points = np.stack((curve_y.astype(np.int32), curve_x.astype(np.int32)), axis=1)
+            cv2.polylines(line_curve, [curve_points], False, line_color, thickness=10)
 
-        # Draw the line position on the frame
-        cv2.line(frame, (int(line_position), 0), (int(line_position), frame.shape[0]), line_color, 2)
+            # Draw points on the line
+            for point in curve_points:
+                cv2.circle(line_points, tuple(point), 5, point_color, -1)
 
         # Control the robot based on the line position
-        pwm_left, pwm_right = control_robot(line_position, frame.shape[1])
+        pwm_left, pwm_right = control_robot(curve_y[-1], frame.shape[1])
+
+        # Overlay the line curve and points on the original frame
+        frame = cv2.addWeighted(frame, 1, line_curve, 0.5, 0)
+        frame = cv2.addWeighted(frame, 1, line_points, 0.5, 0)
 
     # Show the frame
     cv2.imshow("Line Following", frame)
