@@ -273,7 +273,7 @@ def turn(speed: float, radius: float, timeout=0):
 # # input -100 to 100 left and right sides
 
 def move(RIN, LIN, timeout=0):
-
+    print("MOTOR DRIVE START")
     LIN = round(LIN / 5) * 5
 
     RIN = round(RIN / 5) * 5
@@ -288,12 +288,12 @@ def move(RIN, LIN, timeout=0):
 
         off()
 
-        brake()
+        #brake()
 
     else:
 
         #print(L, R)
-
+        print("WRITING TO MOTORS LEFT")
         if L > 0:
 
             motorPWMLA.write(abs(L))
@@ -305,21 +305,21 @@ def move(RIN, LIN, timeout=0):
             motorPWMLB.write(abs(L))
 
             motorPWMLA.write(0)
-
+        print("WRITING TO MOTORS RIGHT")
         if R > 0:
-
+            print("SETTING RIGHT A PWMS")
             motorPWMRA.write(abs(R))
 
             motorPWMRB.write(0)
 
         else:
-
+            print("SETTING RIGHT B PWMS")
             motorPWMRB.write(abs(R))
 
             motorPWMRA.write(0)
 
            
-
+        print("ENGAGING POWER")
         motorLA.write(1)
 
         motorLB.write(1)
@@ -327,6 +327,8 @@ def move(RIN, LIN, timeout=0):
         motorRA.write(1)
 
         motorRB.write(1)
+
+    print("COMPLETE, NEXT CYCLE!")
 
     if timeout > 0:
 

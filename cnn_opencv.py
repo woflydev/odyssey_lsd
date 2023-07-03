@@ -4,9 +4,6 @@ import logging
 import math
 import atexit
 import time
-import datetime
-import sys
-import faulthandler
 
 try:
 	from utils.motor_lib.driver import move, off
@@ -15,13 +12,11 @@ except:
 	print("FAILED TO INITIALIZE. RUNNING ANYWAY!")
 	DRIVER_INITIALIZED = False
 
-faulthandler.enable()
-
-BASE_SPEED = 30
+BASE_SPEED = 40
 RATE_LIMIT = False
 RATE_LIMIT_VALUE = 0.08
 
-SHOW_IMAGES = True
+SHOW_IMAGES = False
 STEP_SIZE = 5 # DEFAULT 5 - the less steps, the more accurate the obstacle detection
 MIN_DISTANCE = 250 # DEFAULT 250 - the distance to consider an obstacle (the larger the number the closer the obstacle is)
 MIN_UTURN_THRESHOLD = 300 # DEFAULT 400 - the distance to consider a u-turn (the larger the number the closer the u-turn has to be)
@@ -58,20 +53,15 @@ class B_OpenCV_Driver(object):
 
 		if left < 0:
 			print("\nLEFT IS NEGATIVE\n")
-			left = 1
+			left = 0
 		if right < 0:
 			print("\nRIGHT IS NEGATIVE\n")
-			right = 1
-		
-		if left > 100:
-			left = 100
-		if right > 100:
-			right = 100
+			right = 0
 
-		print(f"Left: {int(left)}, Right: {int(right)}")
+		print(f"ADJUSTED PWM - LEFT: {int(left)}, Right: {int(right)}")
 
 		# actually write values to motor
-		move(int(left), int(right)) if DRIVER_INITIALIZED else 0 #motors are wired wrong way around lol
+		move(int(left), int(right)) if DRIVER_INITIALIZED else 0 #motors are wired wrong way around lol # not anymore
 
 		print(f"Calculated Steering Angle: {self.curr_steering_angle}")
 
@@ -86,16 +76,20 @@ class B_OpenCV_Driver(object):
 def detect_lane(frame):
 	logging.debug('detecting lane lines...')
 
+	print("EDGES")
 	edges = detect_edges(frame)
 	show_image('edges', edges)
 
+	print("CROPPED EDGES")
 	cropped_edges = region_of_interest(edges)
 	show_image('edges cropped', cropped_edges)
 
+	print("LINE SEGMENTS")
 	line_segments = detect_line_segments(cropped_edges)
 	line_segment_image = display_lines(frame, line_segments)
 	show_image("line segments", line_segment_image)
 
+	print("AVERAGE SLOPE INTERCEPT")
 	lane_lines = average_slope_intercept(frame, line_segments)
 	lane_lines_image = display_lines(frame, lane_lines)
 	show_image("lane lines", lane_lines_image)
