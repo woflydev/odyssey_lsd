@@ -1,0 +1,46 @@
+{
+  "debug": true,
+  "use_windows": false,
+
+  "camera_settings": {
+    "width": 640,
+    "height": 480,
+    "fps": 30,
+    "codec": "MJPG",
+    "capture_code": 0,
+    "buffer": 1,
+    "focus": 100
+  },
+
+  "serial": {
+    "port": "/dev/ttyUSB0",
+    "minimum_steering_value": 60,
+    "maximum_steering_value": 102,
+    "steering_buffer_size": 1,
+    "go_speed": 81,
+    "boost_speed": 55,
+    "stop_speed": 93
+  },
+
+  "colour_ranges": {
+    "obstacle": [[150, 104, 30], [180, 220, 130]],
+    "car": [[0, 160, 140], [10, 240, 240]],
+    "blue_line": [[91, 63, 126], [157, 209, 201]],
+    "yellow_line": [[24, 27, 99], [48, 152, 211]],
+    "finish_line": [[69, 18, 103], [91, 75, 185]]
+  },
+
+  "finish_line": {
+    "minimum_hits": 5,
+    "minimum_contour_area": 2000,
+    "minimum_pixel_offset": 20,
+    "completion_cutoff": 0.1
+  },
+
+  "pathfinding": {
+    "slicing_interval": 0.025,
+    "horizon_line": 0.30,
+    "minimum_contour_area": 50,
+    "minimum_path_width": 0.2
+  }
+}
