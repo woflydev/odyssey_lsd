@@ -1,82 +1,106 @@
 import cv2
 import numpy as np
 
+# Define the desired screen resolution
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480
+
+# Define the region of interest (ROI) for line detection
+ROI_TOP = 300
+ROI_BOTTOM = 480
+
+# Initialize the video capture
 cap = cv2.VideoCapture(0)
+cap.set(3, SCREEN_WIDTH)
+cap.set(4, SCREEN_HEIGHT)
 
-line_color = (0, 255, 0)
-outline_color = (0, 0, 255)
-outline_thickness = 2
-rectangle_color = (255, 0, 0)
-rectangle_thickness = 2
+# Function to preprocess the frame for line detection
+def preprocess_frame(frame):
+    # Convert frame to grayscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-lower_mask = np.array([0, 62, 0], np.uint8)
-upper_mask = np.array([179, 255, 124], np.uint8)
+    # Apply Gaussian blur to reduce noise
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-kp = 0.2
-ki = 0.0
-kd = 0.1
-prev_error = 0
-integral = 0
+    # Apply Canny edge detection
+    edges = cv2.Canny(blurred, 50, 150)
 
-def control_robot(line_position, frame_width):
-    global prev_error, integral
+    # Apply ROI mask
+    mask = np.zeros_like(edges)
+    mask[ROI_TOP:ROI_BOTTOM, :] = 255
+    masked_edges = cv2.bitwise_and(edges, mask)
 
-    error = line_position - frame_width / 2
-    integral += error
-    derivative = error - prev_error
-    prev_error = error
+    return masked_edges
 
-    control_output = kp * error + ki * integral + kd * derivative
-    control_output = np.clip(control_output, -1, 1)
+# Function to detect lines in the frame and calculate steering angle
+def detect_lines(frame):
+    lines = cv2.HoughLinesP(frame, 1, np.pi / 180, threshold=50, minLineLength=50, maxLineGap=100)
 
-    steering_angle = 90 + control_output * 45  # Assuming a maximum steering angle of 45 degrees
+    if lines is not None:
+        # Calculate average slope and intercept of the detected lines
+        slopes = []
+        intercepts = []
 
-    return steering_angle
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            slope = (y2 - y1) / (x2 - x1 + 1e-6)
+            intercept = y1 - slope * x1
+            slopes.append(slope)
+            intercepts.append(intercept)
 
+        avg_slope = np.mean(slopes)
+        avg_intercept = np.mean(intercepts)
+
+        # Calculate steering angle based on the slope
+        steering_angle = np.arctan(avg_slope) * 180 / np.pi
+
+        # Adjust the steering angle for going straight
+        steering_angle += 90
+
+        return steering_angle
+
+    return None
+
+# Main loop
 while True:
+    # Capture frame-by-frame
     ret, frame = cap.read()
 
-    hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    # Preprocess frame for line detection
+    processed_frame = preprocess_frame(frame)
 
-    mask = cv2.inRange(hsv_frame, lower_mask, upper_mask)
+    # Detect lines and calculate steering angle
+    steering_angle = detect_lines(processed_frame)
 
-    blurred = cv2.GaussianBlur(mask, (5, 5), 0)
+    # Display the frame with line detection
+    cv2.imshow('Line Following', processed_frame)
 
-    contours, _ = cv2.findContours(blurred, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Draw heading visualization
+    if steering_angle is not None:
+        # Convert steering angle to radians
+        angle_rad = np.deg2rad(steering_angle)
 
-    if len(contours) > 0:
-        largest_contour = max(contours, key=cv2.contourArea)
+        # Calculate line coordinates for visualization
+        center_x = SCREEN_WIDTH // 2
+        center_y = ROI_BOTTOM
+        line_length = 100
+        line_x = int(center_x + line_length * np.sin(angle_rad))
+        line_y = int(center_y - line_length * np.cos(angle_rad))
 
-        line_curve = np.zeros_like(frame)
+        # Draw heading line
+        cv2.line(frame, (center_x, center_y), (line_x, line_y), (0, 0, 255), 2)
 
-        if len(largest_contour) > 2:
-            curve_points = np.squeeze(largest_contour)
-            curve_fit = np.polyfit(curve_points[:, 1], curve_points[:, 0], deg=2)
+        # Display the frame with heading visualization
+        cv2.imshow('Heading Visualization', frame)
 
-            curve_y = np.linspace(frame.shape[0], 0, num=frame.shape[0])
-            curve_x = np.polyval(curve_fit, curve_y)
-            curve_points = np.stack((curve_x.astype(np.int32), curve_y.astype(np.int32)), axis=1)
+    # Output the steering angle
+    if steering_angle is not None:
+        print("Steering Angle:", steering_angle)
 
-            # Draw the line
-            cv2.polylines(line_curve, [curve_points], False, line_color, thickness=2)
-
-            # Get the bounding rectangle around the line
-            rect_x, rect_y, rect_w, rect_h = cv2.boundingRect(curve_points)
-
-            # Draw the rectangle
-            cv2.rectangle(line_curve, (rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), rectangle_color, rectangle_thickness)
-
-            steering_angle = control_robot(rect_x + rect_w / 2, frame.shape[1])
-
-            frame = cv2.addWeighted(frame, 1, line_curve, 0.5, 0)
-
-            print(steering_angle)
-
-    cv2.imshow("Line Following", frame)
-
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord('q'):
+    # Exit the loop if 'q' is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Release the video capture and close all windows
 cap.release()
 cv2.destroyAllWindows()
