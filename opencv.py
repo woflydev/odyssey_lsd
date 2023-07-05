@@ -111,6 +111,8 @@ def detect_edges(frame):
 	UPPER_MASK = np.array([179, 255, 124], np.uint8)
 	mask = cv2.inRange(hsv, LOWER_MASK, UPPER_MASK)
 
+	cv2.imwrite("camera.mask.test.png", mask)
+
 	#mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
 	#mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
 
