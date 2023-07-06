@@ -1,56 +1,54 @@
-import cv2    #importing the opencv module of python to access the image related functions (for the image processing part of the project)
-import numpy as np      #importing the numpy module , gives access to mathematical functions and matrices etc.         #for the serial port communication  
-import time             #gives access to time related functions
+import cv2
+import numpy as np
+import time
 
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)       #capturing the video from the droidcam and storing it in cap variable
+SHOW_IMAGES = True
+BASE_SPEED = 30
 
-def skeletonize(img):
-    """ OpenCV function to return a skeletonized version of img, a Mat object"""
+BLUR_KERNEL = 15
+LOW_BLUE = [84, 0, 223]
+HIGH_BLUE = [136, 255, 255]
+LOW_YELLOW = [0, 0, 239]
+HIGH_YELLOW = [43, 63, 255]
 
-    #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+def pwm(speed, theta):
+	try:
+		theta = ((theta + 180) % 360) - 180  # normalize value to [-180, 180)
+		speed = min(max(0, speed), 100)              # normalize value to [0, 100]
+		v_a = speed * (45 - theta % 90) / 45          # falloff of main motor
+		v_b = min(100, 2 * speed + v_a, 2 * speed - v_a)  # compensation of other motor
+		if theta < -90: return -v_b, -v_a
+		if theta < 0:   return -v_a, v_b
+		if theta < 90:  return v_b, v_a
+		return [v_a, -v_b]
+	except:
+			print('Unable to calculate PWM! (Most commonly from division by zero)')
 
-    img = img.copy() # don't clobber original
-    skel = img.copy()
+def show(window_name, frame, show_img):
+	if show_img:
+		cv2.imshow(window_name, frame)
 
-    skel[:,:] = 0
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
-
-    while True:
-        eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, kernel)
-        temp = cv2.morphologyEx(eroded, cv2.MORPH_DILATE, kernel)
-        temp  = cv2.subtract(img, temp)
-        skel = cv2.bitwise_or(skel, temp)
-        img[:,:] = eroded[:,:]
-        if cv2.countNonZero(img) == 0:
-            break
-
-    return skel
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
 angle = 0
 while True:
     error = 0
-    ret, frame = cap.read()             #this condition remains true as long as the read function is receiving frames from the source video
-                                        #as soon as it stops receiving frames(at the end of the source video), this condition will turn false
-                                        #and the loop exits
-    if ret:
-        #print(frame.shape[:2])              #used this to output my native resolution of the image received by the phone camera = (480, 640)
-        blurKernel = 15
+    ret, frame = cap.read()
 
-        frame = cv2.blur(frame, (blurKernel, blurKernel))
+    if ret:
+        frame = cv2.blur(frame, (BLUR_KERNEL, BLUR_KERNEL))
         contourFrame = np.copy(frame)
 
-        low_b = np.uint8([84, 0, 223])
-        high_b = np.uint8([136, 255, 255])
+        low_b = np.uint8(LOW_BLUE)
+        high_b = np.uint8(HIGH_BLUE)
 
-        low_y = np.uint8([0, 0, 239])
-        high_y = np.uint8([43, 63, 255])
+        low_y = np.uint8(LOW_YELLOW)
+        high_y = np.uint8(HIGH_YELLOW)
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         blueMask = cv2.inRange(hsv, low_b, high_b)
         yellowMask = cv2.inRange(hsv, low_y, high_y)
-
-        # used masking as a method to preprocess the image 
 
         blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
         yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
@@ -60,13 +58,12 @@ while True:
 
         blueAngle = None
         yellowAngle = None
-        
 
-        if len(blueContours) > 0:                                      # when there are more than two areas or two areas with black regions only consider the biggest area for the calculations
+        if len(blueContours) > 0:
             c_b = max(blueContours, key=cv2.contourArea)
             #print(c_b.shape)
             M = cv2.moments(c_b)
-            if M["m00"] !=0 :                                       #calculating the center of the countours using the moments method
+            if M["m00"] != 0:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00'])
                 #blueEndPoint = max(np.reshape(c_b, (c_b.shape[0], c_b.shape[2])), key=lambda x: x[1])   
@@ -74,13 +71,13 @@ while True:
                 print(f"Blue steering angle: {blueAngle} degrees")
 
                 cv2.drawContours(contourFrame, [c_b], 0, (0, 0, 255), 3)
-                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)            #for the better view of the center of the contour we represent it by a circle to keep track of what the camera is viewing.
+                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
                 cv2.line(contourFrame, (cx, cy), (round(blueEndPoint[0]), blueEndPoint[1]), (0, 255, 0), 5)
 
-        if len(yellowContours) > 0:                                      # when there are more than two areas or two areas with black regions only consider the biggest area for the calculations
+        if len(yellowContours) > 0:
             c_y = max(yellowContours, key=cv2.contourArea)
             M = cv2.moments(c_y)
-            if M["m00"] !=0 :                                       #calculating the center of the countours using the moments method
+            if M["m00"] != 0:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00']) 
                 #yellowEndPoint = max(c_y, key=lambda x: x[1])   
@@ -88,7 +85,7 @@ while True:
                 print(f"Yellow steering angle: {yellowAngle} degrees")
 
                 cv2.drawContours(contourFrame, [c_y], 0, (0, 0, 255), 3)
-                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)            #for the better view of the center of the contour we represent it by a circle to keep track of what the camera is viewing.
+                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
                 cv2.line(contourFrame, (cx, cy), (round(yellowEndPoint[0]), yellowEndPoint[1]), (0, 255, 0), 5)
         
         
@@ -99,25 +96,22 @@ while True:
         elif blueAngle is not None and yellowAngle is not None:
             angle = (blueAngle + yellowAngle) / 2
         else:
-            print("Give up")
+            print("give up lol")
 
-        cv2.imshow("Blue Mask",blueMask)                                             #display the mask for confirmation
-        cv2.imshow("Yellow Mask", yellowMask)
-        cv2.imshow("Frame",frame)                                           #display the original frame which is recieved
-        cv2.imshow("Contours", contourFrame)
+        show("Blue Mask", blueMask, SHOW_IMAGES)
+        show("Yellow Mask", yellowMask, SHOW_IMAGES)
+        show("Frame", frame, SHOW_IMAGES)
+        show("Contours", contourFrame, SHOW_IMAGES)
+
         print(f"Steering angle: {angle} degrees")
-                            #The final step is to write this error on the Serial Port which
-                                                                            #would be read by the Arduino and would help in implementing
-                                                                            #the PID controller.
+
+        left, right = pwm(BASE_SPEED, angle)
+
+        print(f"Left: {left}, Right: {right}")
+
         time.sleep(0.005)
 
-    if cv2.waitKey(1) & 0xff == ord('q'):   # 1 is the time in ms
-                                            # it tells the loop to wait for the argument inside the waitKey function (in milliseconds)
-                                        # and if it detects any keystroke inside that duration it will return true, 
-                                        # also the 0xFF==ord('d') returns the ASCII value of key 'd' if it is pressed
-                                        # so the break statement is only executed when the 0xFF==ord('d') returns True so the 
-                                        # cv.waitKey(1) & 0xFF==ord('d') will also return true and the break statement will be executed
-                                        # stopping the loop and the videocapture
+    if cv2.waitKey(1) & 0xff == ord('q'):
         break
 
 cap.release()
