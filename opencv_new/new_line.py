@@ -2,14 +2,17 @@ import cv2
 import numpy as np
 import time
 
+VIDEO_SOURCE = 0    
+
 SHOW_IMAGES = True
 BASE_SPEED = 30
 
-BLUR_KERNEL = 15
-LOW_BLUE = [84, 0, 223]
-HIGH_BLUE = [136, 255, 255]
-LOW_YELLOW = [0, 0, 239]
-HIGH_YELLOW = [43, 63, 255]
+BLUR_KERNEL = 10
+# for testing only [0, 62, 0], [179, 255, 124]
+LOW_BLUE = [0, 62, 0]
+HIGH_BLUE = [179, 255, 124]
+LOW_YELLOW = [0, 62, 0]
+HIGH_YELLOW = [179, 255, 124]
 
 def pwm(speed, theta):
 	try:
@@ -20,7 +23,7 @@ def pwm(speed, theta):
 		if theta < -90: return -v_b, -v_a
 		if theta < 0:   return -v_a, v_b
 		if theta < 90:  return v_b, v_a
-		return [round(v_a), round(-v_b)]
+		return [int(v_a), int(-v_b)]
 	except:
 			print('Unable to calculate PWM! (Most commonly from division by zero)')
 
@@ -54,8 +57,8 @@ def show(window_name, frame, show_img):
 	if show_img:
 		cv2.imshow(window_name, frame)
 
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-input("Press Enter to start analysing frames: ")
+cap = cv2.VideoCapture(VIDEO_SOURCE, cv2.CAP_DSHOW)
+input("Press Enter to start analysing frames")
 
 previousYellowAngle = None
 previousBlueAngle = None
