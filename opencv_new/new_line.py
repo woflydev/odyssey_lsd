@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import time
+import math
 
 VIDEO_SOURCE = 0    
 
@@ -56,6 +57,25 @@ def stabilize(current, new, num_lanes, max_confident_deviation=8, max_unsure_dev
 def show(window_name, frame, show_img):
 	if show_img:
 		cv2.imshow(window_name, frame)
+
+def heading(frame, angle):
+	heading_image = np.zeros_like(frame)
+	height, width, _ = frame.shape
+
+	# figure out the heading line from steering angle
+	# heading line (x1,y1) is always center bottom of the screen
+	# (x2, y2) requires a bit of trigonometry
+
+	radians = angle / 180.0 * math.pi
+	x1 = int(width / 2)
+	y1 = height
+	x2 = int(x1 - height / 2 / math.tan(radians))
+	y2 = int(height / 2)
+
+	cv2.line(heading_image, (x1, y1), (x2, y2), (0, 0, 255), 10)
+	heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
+
+	return heading_image
 
 cap = cv2.VideoCapture(VIDEO_SOURCE, cv2.CAP_DSHOW)
 input("Press Enter to start analysing frames")
@@ -138,8 +158,7 @@ while True:
                 cv2.drawContours(contourFrame, [c_y], 0, (0, 0, 255), 3)
                 cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
                 cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)
-        
-        
+
         if blueAngle is None and yellowAngle is not None:
             if previousYellowAngle is not None:
                 angle = stabilize(yellowAngle, previousYellowAngle, 1)
@@ -157,11 +176,14 @@ while True:
                 angle = (blueAngle + yellowAngle) / 2
         else:
             print("give up lol")
+        
+        heading_img = heading(contourFrame, angle)
 
         show("Blue Mask", blueMask, SHOW_IMAGES)
         show("Yellow Mask", yellowMask, SHOW_IMAGES)
         show("Frame", frame, SHOW_IMAGES)
         show("Contours", contourFrame, SHOW_IMAGES)
+        show("Heading", heading_img, SHOW_IMAGES)
 
         print(f"Steering angle: {angle} degrees")
 
@@ -176,8 +198,12 @@ while True:
 
         time.sleep(0.005)
 
-    if cv2.waitKey(1) & 0xff == ord('q'):
-        break
+    try:
+        if cv2.waitKey(1) & 0xff == ord('q'):
+            break
+    except KeyboardInterrupt:
+        pass
 
 cap.release()
 cv2.destroyAllWindows()
+exit(0)
