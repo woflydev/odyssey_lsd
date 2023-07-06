@@ -107,6 +107,11 @@ while True:
 
         left, right = pwm(BASE_SPEED, angle)
 
+        if left < 0:
+            left = 0
+        if right < 0:
+            right = 0
+
         print(f"Left: {left}, Right: {right}")
 
         time.sleep(0.005)
