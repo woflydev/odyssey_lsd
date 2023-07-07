@@ -166,7 +166,7 @@ while True:
                 angle = yellowAngle
         elif blueAngle is not None and yellowAngle is not None:
             if previousBlueAngle is not None and previousYellowAngle is not None:
-                angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2)
+                angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2, 2)
             else:
                 angle = (blueAngle + yellowAngle) / 2
         else:
