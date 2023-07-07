@@ -59,31 +59,31 @@ def show(window_name, frame, show_img):
 		cv2.imshow(window_name, frame)
 
 def heading(frame, angle):
-	heading_image = np.zeros_like(frame)
-	height, width, _ = frame.shape
+    heading_image = np.zeros_like(frame)
+    height, width, _ = frame.shape
+    radians = 0
+    if angle is None:
+        radians = math.pi / 2
+    else:
+        radians = angle / 180.0 * math.pi
+    x1 = int(width / 2)
+    y1 = height
+    x2 = int(x1 - height / 2 / math.tan(radians))
+    y2 = int(height / 2)
 
-	# figure out the heading line from steering angle
-	# heading line (x1,y1) is always center bottom of the screen
-	# (x2, y2) requires a bit of trigonometry
-
-	radians = angle / 180.0 * math.pi
-	x1 = int(width / 2)
-	y1 = height
-	x2 = int(x1 - height / 2 / math.tan(radians))
-	y2 = int(height / 2)
-
-	cv2.line(heading_image, (x1, y1), (x2, y2), (0, 0, 255), 10)
-	heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
-
-	return heading_image
+    cv2.line(heading_image, (x1, y1), (x2, y2), (0, 0, 255), 10)
+    heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
+    return heading_image
 
 cap = cv2.VideoCapture(VIDEO_SOURCE, cv2.CAP_DSHOW)
 input("Press Enter to start analysing frames")
 
 previousYellowAngle = None
 previousBlueAngle = None
+blueLeft = True
 angle = 90
 cutoff = 1/2
+fracOffset = 1/16
 threshold = 10
 while True:
     error = 0
@@ -105,19 +105,17 @@ while True:
         yellowMask = cv2.inRange(hsv, low_y, high_y)
 
         # Only focuses on the bottom half or section of the screen as determined by cutoff
-        blueCut = np.zeros_like(blueMask)
-        yellowCut = np.zeros_like(yellowMask)
+        bottomLeft = np.zeros_like(blueMask)
+        bottomRight = np.zeros_like(yellowMask)
 
-        blueCut = cv2.rectangle(blueCut, (0, blueCut.shape[0]), (round(blueCut.shape[1] * cutoff), round(blueCut.shape[0] * (1 - cutoff))), 255, -1)
-        yellowCut = cv2.rectangle(yellowCut, (yellowCut.shape[1], yellowCut.shape[0]), (round(yellowCut.shape[1] * (1 - cutoff)), round(yellowCut.shape[0] * (1 - cutoff))), 255, -1)
+        bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff), round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
+        bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff)), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
 
-        blueMask = cv2.bitwise_and(blueMask, blueMask, mask=blueCut)
-        yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=yellowCut)
+        blueMask = cv2.bitwise_and(blueMask, blueMask, mask=bottomLeft if blueLeft else bottomRight)
+        yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=bottomRight if blueLeft else bottomLeft)
 
         blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
         yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
-
-        fracOffset = 1/16
 
         blueEndPoint = (frame.shape[1] * fracOffset, frame.shape[0])
         yellowEndPoint = ((1 - fracOffset) * frame.shape[1], frame.shape[0])
