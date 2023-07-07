@@ -24,6 +24,32 @@ def pwm(speed, theta):
 	except:
 			print('Unable to calculate PWM! (Most commonly from division by zero)')
 
+def stabilize(current, new, num_lanes, max_confident_deviation=8, max_unsure_deviation=4):
+	"""
+	Using last steering angle to stabilize the steering angle
+	This can be improved to use last N angles, etc
+	if new angle is too different from current angle, only turn by max_angle_deviation degrees
+	"""
+	if num_lanes == 2:
+		# if both lane lines detected, then we can deviate more
+		max_angle_deviation = max_confident_deviation
+	elif num_lanes == 1:
+		# if only one lane detected, don't deviate too much
+		max_angle_deviation = max_unsure_deviation
+	else:
+		max_angle_deviation = 2
+	#elif num_lanes == 0:
+		#max_angle_deviation = 100
+	
+	angle_deviation = new - current
+	if abs(angle_deviation) > max_angle_deviation:
+		stabilized_steering_angle = int(current
+										+ max_angle_deviation * angle_deviation / abs(angle_deviation))
+	else:
+		stabilized_steering_angle = new
+	print('INFO: Proposed angle: %s, stabilized angle: %s' % (new, stabilized_steering_angle))
+	return stabilized_steering_angle
+
 def show(window_name, frame, show_img):
 	if show_img:
 		cv2.imshow(window_name, frame)
@@ -31,6 +57,8 @@ def show(window_name, frame, show_img):
 cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 input("Press Enter to start analysing frames: ")
 
+previousYellowAngle = None
+previousBlueAngle = None
 angle = 0
 while True:
     error = 0
@@ -68,6 +96,7 @@ while True:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00'])
                 #blueEndPoint = max(np.reshape(c_b, (c_b.shape[0], c_b.shape[2])), key=lambda x: x[1])   
+                previousBlueAngle = blueAngle
                 blueAngle = 180 - round(np.arctan2(blueEndPoint[1] - cy, cx - blueEndPoint[0]) * 180 / np.pi)        
                 #print(f"Blue steering angle: {blueAngle} degrees")
 
@@ -81,7 +110,8 @@ while True:
             if M["m00"] != 0:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00']) 
-                #yellowEndPoint = max(c_y, key=lambda x: x[1])   
+                #yellowEndPoint = max(c_y, key=lambda x: x[1])
+                previousYellowAngle = yellowAngle   
                 yellowAngle = 180 - round(np.arctan2(yellowEndPoint[1] - cy, cx - yellowEndPoint[0]) * 180 / np.pi)        
                 #print(f"Yellow steering angle: {yellowAngle} degrees")
 
@@ -91,11 +121,20 @@ while True:
         
         
         if blueAngle is None and yellowAngle is not None:
-            angle = yellowAngle
+            if previousYellowAngle is not None:
+                angle = stabilize(yellowAngle, previousYellowAngle, 1)
+            else:
+                angle = yellowAngle
         elif yellowAngle is None and blueAngle is not None:
-            angle = blueAngle
+            if previousBlueAngle is not None:
+                angle = stabilize(blueAngle, previousBlueAngle, 1)
+            else:
+                angle = yellowAngle
         elif blueAngle is not None and yellowAngle is not None:
-            angle = (blueAngle + yellowAngle) / 2
+            if previousBlueAngle is not None and previousYellowAngle is not None:
+                angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2)
+            else:
+                  angle = (blueAngle + yellowAngle) / 2
         else:
             print("give up lol")
 
