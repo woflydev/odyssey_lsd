@@ -134,7 +134,7 @@ while True:
                 else:
                     edgePoints = list(map(lambda x: x[1], filter(lambda x: x[0] <= threshold, np.reshape(c_b, (c_b.shape[0], c_b.shape[2])))))
                     nullBool = len(edgePoints) == 0
-                    endPoint = (0, np.median(edgePoints))
+                    endPoint = (0, round(np.median(edgePoints)))
                 previousBlueAngle = blueAngle
                 if not nullBool:
                     blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
@@ -157,7 +157,7 @@ while True:
                 else:
                     edgePoints = list(map(lambda x: x[1], filter(lambda x: frame.shape[1] - x[0] <= threshold, np.reshape(c_y, (c_y.shape[0], c_y.shape[2])))))
                     nullBool = len(edgePoints) == 0
-                    endPoint = (0, np.median(edgePoints))
+                    endPoint = (0, round(np.median(edgePoints)))
                 previousYellowAngle = yellowAngle
                 if not nullBool: 
                     yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi) 
