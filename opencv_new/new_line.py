@@ -105,8 +105,14 @@ while True:
         yellowMask = cv2.inRange(hsv, low_y, high_y)
 
         # Only focuses on the bottom half or section of the screen as determined by cutoff
-        cv2.rectangle(blueMask, (0, 0), (frame.shape[1], round(frame.shape[0] * (1 - cutoff))), 0, -1)
-        cv2.rectangle(yellowMask, (0, 0), (frame.shape[1], round(frame.shape[0] * (1 - cutoff))), 0, -1)
+        blueCut = np.zeros_like(blueMask)
+        yellowCut = np.zeros_like(yellowMask)
+
+        cv2.rectangle(blueCut, (0, blueCut.shape[0]), (blueCut.shape[1] * cutoff, blueCut.shape[0] * (1 - cutoff)), 255, -1)
+        cv2.rectangle(yellowCut, (yellowCut.shape[1], yellowCut.shape[0]), (yellowCut.shape[1] * (1 - cutoff), yellowCut.shape[0] * (1 - cutoff)), 255, -1)
+
+        blueMask = cv2.bitwise_and(blueMask, blueMask, mask=blueCut)
+        yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=yellowCut)
 
         blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
         yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
