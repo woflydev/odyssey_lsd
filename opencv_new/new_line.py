@@ -63,6 +63,7 @@ input("Press Enter to start analysing frames")
 previousYellowAngle = None
 previousBlueAngle = None
 angle = 0
+cutoff = 1/2
 while True:
     error = 0
     ret, frame = cap.read()
@@ -81,6 +82,10 @@ while True:
 
         blueMask = cv2.inRange(hsv, low_b, high_b)
         yellowMask = cv2.inRange(hsv, low_y, high_y)
+
+        # Only focuses on the bottom half or section of the screen as determined by cutoff
+        cv2.rectangle(blueMask, (0, 0), (frame.shape[1], round(frame.shape[0] * (1 - cutoff))), 0, -1)
+        cv2.rectangle(yellowMask, (0, 0), (frame.shape[1], round(frame.shape[0] * (1 - cutoff))), 0, -1)
 
         blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
         yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
@@ -148,8 +153,7 @@ while True:
 
         print(f"Steering angle: {angle} degrees")
 
-        left, right = pwm(BASE_SPEED, angle - 90
-                          )
+        left, right = pwm(BASE_SPEED, angle - 90)
 
         if left < 0:
             left = 0
