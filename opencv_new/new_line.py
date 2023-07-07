@@ -84,6 +84,7 @@ previousYellowAngle = None
 previousBlueAngle = None
 angle = 90
 cutoff = 1/2
+threshold = 10
 while True:
     error = 0
     ret, frame = cap.read()
@@ -131,7 +132,7 @@ while True:
                 if tmpBlueEndPoint[1] == frame.shape[0]:
                     endPoint = blueEndPoint
                 else:
-                    edgePoints = list(map(lambda x: x[1], filter(lambda x: x[0] == 0, np.reshape(c_b, (c_b.shape[0], c_b.shape[2])))))
+                    edgePoints = list(map(lambda x: x[1], filter(lambda x: x[0] <= threshold, np.reshape(c_b, (c_b.shape[0], c_b.shape[2])))))
                     nullBool = len(edgePoints) == 0
                     endPoint = (0, np.median(edgePoints))
                 previousBlueAngle = blueAngle
@@ -154,7 +155,7 @@ while True:
                 if tmpYellowEndPoint[1] == frame.shape[0]:
                     endPoint = yellowEndPoint
                 else:
-                    edgePoints = list(map(lambda x: x[1], filter(lambda x: x[0] == frame.shape[1], np.reshape(c_y, (c_y.shape[0], c_y.shape[2])))))
+                    edgePoints = list(map(lambda x: x[1], filter(lambda x: frame.shape[1] - x[0] <= threshold, np.reshape(c_y, (c_y.shape[0], c_y.shape[2])))))
                     nullBool = len(edgePoints) == 0
                     endPoint = (0, np.median(edgePoints))
                 previousYellowAngle = yellowAngle
