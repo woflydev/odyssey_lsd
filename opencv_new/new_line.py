@@ -128,9 +128,10 @@ while True:
                 tmpBlueEndPoint = max(np.reshape(c_b, (c_b.shape[0], c_b.shape[2])), key=lambda x: x[1])
                 endPoint = []
                 if tmpBlueEndPoint[1] == frame.shape[0]:
-                    endPoint = tmpBlueEndPoint
-                else:
                     endPoint = blueEndPoint
+                else:
+                    edgePoints = map(lambda x: x[1], filter(lambda x: x[0] == 0, np.reshape(c_b, (c_b.shape[0], c_b.shape[2]))))
+                    endPoint = (0, np.median(edgePoints))
                 previousBlueAngle = blueAngle
                 blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)        
                 #print(f"Blue steering angle: {blueAngle} degrees")
@@ -148,9 +149,10 @@ while True:
                 tmpYellowEndPoint = max(np.reshape(c_y, (c_y.shape[0], c_y.shape[2])), key=lambda x: x[1])
                 endPoint = []
                 if tmpYellowEndPoint[1] == frame.shape[0]:
-                    endPoint = tmpYellowEndPoint
-                else:
                     endPoint = yellowEndPoint
+                else:
+                    edgePoints = map(lambda x: x[1], filter(lambda x: x[0] == frame.shape[1], np.reshape(c_b, (c_b.shape[0], c_b.shape[2]))))
+                    endPoint = (0, np.median(edgePoints))
                 previousYellowAngle = yellowAngle   
                 yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)        
                 #print(f"Yellow steering angle: {yellowAngle} degrees")
