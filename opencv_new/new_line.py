@@ -20,7 +20,7 @@ def pwm(speed, theta):
 		if theta < -90: return -v_b, -v_a
 		if theta < 0:   return -v_a, v_b
 		if theta < 90:  return v_b, v_a
-		return [v_a, -v_b]
+		return [round(v_a), round(-v_b)]
 	except:
 			print('Unable to calculate PWM! (Most commonly from division by zero)')
 
@@ -29,6 +29,7 @@ def show(window_name, frame, show_img):
 		cv2.imshow(window_name, frame)
 
 cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+input("Press Enter to start analysing frames: ")
 
 angle = 0
 while True:
@@ -68,7 +69,7 @@ while True:
                 cy = int(M['m01']/M['m00'])
                 #blueEndPoint = max(np.reshape(c_b, (c_b.shape[0], c_b.shape[2])), key=lambda x: x[1])   
                 blueAngle = 180 - round(np.arctan2(blueEndPoint[1] - cy, cx - blueEndPoint[0]) * 180 / np.pi)        
-                print(f"Blue steering angle: {blueAngle} degrees")
+                #print(f"Blue steering angle: {blueAngle} degrees")
 
                 cv2.drawContours(contourFrame, [c_b], 0, (0, 0, 255), 3)
                 cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
@@ -82,7 +83,7 @@ while True:
                 cy = int(M['m01']/M['m00']) 
                 #yellowEndPoint = max(c_y, key=lambda x: x[1])   
                 yellowAngle = 180 - round(np.arctan2(yellowEndPoint[1] - cy, cx - yellowEndPoint[0]) * 180 / np.pi)        
-                print(f"Yellow steering angle: {yellowAngle} degrees")
+                #print(f"Yellow steering angle: {yellowAngle} degrees")
 
                 cv2.drawContours(contourFrame, [c_y], 0, (0, 0, 255), 3)
                 cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
@@ -105,7 +106,8 @@ while True:
 
         print(f"Steering angle: {angle} degrees")
 
-        left, right = pwm(BASE_SPEED, angle)
+        left, right = pwm(BASE_SPEED, angle - 90
+                          )
 
         if left < 0:
             left = 0
