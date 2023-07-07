@@ -114,7 +114,7 @@ while True:
         fracOffset = 1/16
 
         blueEndPoint = (frame.shape[1] * fracOffset, frame.shape[0])
-        yellowEndPoint = ((1 - fracOffset) - frame.shape[1], frame.shape[0])
+        yellowEndPoint = ((1 - fracOffset) * frame.shape[1], frame.shape[0])
 
         blueAngle = None
         yellowAngle = None
