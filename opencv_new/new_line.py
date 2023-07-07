@@ -9,8 +9,8 @@ BASE_SPEED = 30
 
 BLUR_KERNEL = 10
 # for testing only [0, 62, 0], [179, 255, 124]
-LOW_BLUE = [0, 62, 0]
-HIGH_BLUE = [179, 255, 124]
+LOW_BLUE = [0, 0, 0]
+HIGH_BLUE = [0, 0, 0]
 LOW_YELLOW = [0, 62, 0]
 HIGH_YELLOW = [179, 255, 124]
 
