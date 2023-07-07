@@ -103,14 +103,19 @@ while True:
             if M["m00"] != 0:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00'])
-                #blueEndPoint = max(np.reshape(c_b, (c_b.shape[0], c_b.shape[2])), key=lambda x: x[1])   
+                tmpBlueEndPoint = max(np.reshape(c_b, (c_b.shape[0], c_b.shape[2])), key=lambda x: x[1])
+                endPoint = []
+                if tmpBlueEndPoint[1] == frame.shape[0]:
+                    endPoint = tmpBlueEndPoint
+                else:
+                    endPoint = blueEndPoint
                 previousBlueAngle = blueAngle
-                blueAngle = 180 - round(np.arctan2(blueEndPoint[1] - cy, cx - blueEndPoint[0]) * 180 / np.pi)        
+                blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)        
                 #print(f"Blue steering angle: {blueAngle} degrees")
 
                 cv2.drawContours(contourFrame, [c_b], 0, (0, 0, 255), 3)
                 cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
-                cv2.line(contourFrame, (cx, cy), (round(blueEndPoint[0]), blueEndPoint[1]), (0, 255, 0), 5)
+                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)
 
         if len(yellowContours) > 0:
             c_y = max(yellowContours, key=cv2.contourArea)
@@ -118,14 +123,19 @@ while True:
             if M["m00"] != 0:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00']) 
-                #yellowEndPoint = max(c_y, key=lambda x: x[1])
+                tmpYellowEndPoint = max(np.reshape(c_y, (c_y.shape[0], c_y.shape[2])), key=lambda x: x[1])
+                endPoint = []
+                if tmpYellowEndPoint[1] == frame.shape[0]:
+                    endPoint = tmpYellowEndPoint
+                else:
+                    endPoint = yellowEndPoint
                 previousYellowAngle = yellowAngle   
-                yellowAngle = 180 - round(np.arctan2(yellowEndPoint[1] - cy, cx - yellowEndPoint[0]) * 180 / np.pi)        
+                yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)        
                 #print(f"Yellow steering angle: {yellowAngle} degrees")
 
                 cv2.drawContours(contourFrame, [c_y], 0, (0, 0, 255), 3)
                 cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
-                cv2.line(contourFrame, (cx, cy), (round(yellowEndPoint[0]), yellowEndPoint[1]), (0, 255, 0), 5)
+                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)
         
         
         if blueAngle is None and yellowAngle is not None:
@@ -142,7 +152,7 @@ while True:
             if previousBlueAngle is not None and previousYellowAngle is not None:
                 angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2)
             else:
-                  angle = (blueAngle + yellowAngle) / 2
+                angle = (blueAngle + yellowAngle) / 2
         else:
             print("give up lol")
 
