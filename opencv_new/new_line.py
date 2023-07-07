@@ -82,7 +82,7 @@ input("Press Enter to start analysing frames")
 
 previousYellowAngle = None
 previousBlueAngle = None
-angle = 0
+angle = 90
 cutoff = 1/2
 while True:
     error = 0
@@ -184,6 +184,7 @@ while True:
                 angle = (blueAngle + yellowAngle) / 2
         else:
             print("give up lol")
+            angle = 90
         
         heading_img = heading(contourFrame, angle)
 
