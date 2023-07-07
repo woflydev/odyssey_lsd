@@ -81,6 +81,8 @@ class Vision(object):
 
 				self.frame_count += 1
 
+				cv2.imshow("original", self.frame)
+
 				# Apply RBG->HSV conversion and blurring
 				cv2.medianBlur(cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV), 3, self.frame)
 
@@ -493,29 +495,30 @@ class Vision(object):
 								right_border_exit = (width - 1, last_point[1])
 
 								if i == 0:
-										centremost_block = sorted(
-												[block for block in row],
-												key=lambda b: abs((b[0] + b[1]) // 2 - centre),
-										)[0]
+										if len(row) != 0:
+											centremost_block = sorted(
+													[block for block in row],
+													key=lambda b: abs((b[0] + b[1]) // 2 - centre),
+											)[0]
 
-										if (
-												"left_line" in centremost_block[2][0]
-												and "left_line" in centremost_block[2][1]
-										):
-												points.append(right_border_exit)
-										elif (
-												"right_line" in centremost_block[2][0]
-												and "right_line" in centremost_block[2][1]
-										):
-												points.append(left_border_exit)
-										elif "left_line" in centremost_block[2][1]:
-												points.append(right_border_exit)
-										elif "right_line" in centremost_block[2][0]:
-												points.append(left_border_exit)
-										else:
-												points.append(left_border_exit)
+											if (
+													"left_line" in centremost_block[2][0]
+													and "left_line" in centremost_block[2][1]
+											):
+													points.append(right_border_exit)
+											elif (
+													"right_line" in centremost_block[2][0]
+													and "right_line" in centremost_block[2][1]
+											):
+													points.append(left_border_exit)
+											elif "left_line" in centremost_block[2][1]:
+													points.append(right_border_exit)
+											elif "right_line" in centremost_block[2][0]:
+													points.append(left_border_exit)
+											else:
+													points.append(left_border_exit)
 
-										break
+											break
 
 								condition_bools = (
 										"left_border" in last_block[2][0],
