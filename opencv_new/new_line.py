@@ -191,7 +191,7 @@ while True:
         if right < 0:
             right = 0
 
-        print(f"Left: {left}, Right: {right}")
+        print(f"Left: {round(left)}, Right: {round(right)}")
 
         time.sleep(0.005)
 
