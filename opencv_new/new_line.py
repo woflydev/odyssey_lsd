@@ -136,12 +136,11 @@ while True:
                     endPoint = (0, np.median(edgePoints))
                 previousBlueAngle = blueAngle
                 if not nullBool:
-                    blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)        
+                    blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
+                    cv2.drawContours(contourFrame, [c_b], 0, (0, 0, 255), 3)
+                    cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
+                    cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)     
                 #print(f"Blue steering angle: {blueAngle} degrees")
-
-                cv2.drawContours(contourFrame, [c_b], 0, (0, 0, 255), 3)
-                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
-                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)
 
         if len(yellowContours) > 0:
             c_y = max(yellowContours, key=cv2.contourArea)
@@ -160,12 +159,13 @@ while True:
                     endPoint = (0, np.median(edgePoints))
                 previousYellowAngle = yellowAngle
                 if not nullBool: 
-                    yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)        
+                    yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi) 
+                    cv2.drawContours(contourFrame, [c_y], 0, (0, 0, 255), 3)
+                    cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
+                    cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)       
                 #print(f"Yellow steering angle: {yellowAngle} degrees")
 
-                cv2.drawContours(contourFrame, [c_y], 0, (0, 0, 255), 3)
-                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
-                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)
+                
 
         if blueAngle is None and yellowAngle is not None:
             if previousYellowAngle is not None:
