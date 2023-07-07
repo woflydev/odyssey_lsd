@@ -26,7 +26,7 @@ def pwm(speed, theta):
 		if theta < 90:  return v_b, v_a
 		return [int(v_a), int(-v_b)]
 	except:
-			print('Unable to calculate PWM! (Most commonly from division by zero)')
+		print('Unable to calculate PWM! (Most commonly from division by zero)')
 
 def stabilize(current, new, num_lanes, max_confident_deviation=8, max_unsure_deviation=4):
 	"""
@@ -163,7 +163,7 @@ while True:
             if previousBlueAngle is not None:
                 angle = stabilize(blueAngle, previousBlueAngle, 1)
             else:
-                angle = yellowAngle
+                angle = blueAngle
         elif blueAngle is not None and yellowAngle is not None:
             if previousBlueAngle is not None and previousYellowAngle is not None:
                 angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2, 2)
@@ -180,6 +180,7 @@ while True:
         show("Frame", frame, SHOW_IMAGES)
         show("Contours", contourFrame, SHOW_IMAGES)
         show("Heading", heading_img, SHOW_IMAGES)
+        
 
         print(f"Steering angle: {angle} degrees")
 
