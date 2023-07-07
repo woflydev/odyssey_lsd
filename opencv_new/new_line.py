@@ -151,7 +151,7 @@ while True:
                 if tmpYellowEndPoint[1] == frame.shape[0]:
                     endPoint = yellowEndPoint
                 else:
-                    edgePoints = map(lambda x: x[1], filter(lambda x: x[0] == frame.shape[1], np.reshape(c_b, (c_b.shape[0], c_b.shape[2]))))
+                    edgePoints = map(lambda x: x[1], filter(lambda x: x[0] == frame.shape[1], np.reshape(c_y, (c_y.shape[0], c_y.shape[2]))))
                     endPoint = (0, np.median(edgePoints))
                 previousYellowAngle = yellowAngle   
                 yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)        
