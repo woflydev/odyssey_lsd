@@ -90,8 +90,8 @@ while True:
         blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
         yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
 
-        blueEndPoint = (-frame.shape[1] / 8, frame.shape[0])
-        yellowEndPoint = (frame.shape[1] * 9 / 8, frame.shape[0])
+        blueEndPoint = (0, frame.shape[0])
+        yellowEndPoint = (frame.shape[1], frame.shape[0])
 
         blueAngle = None
         yellowAngle = None
