@@ -126,7 +126,6 @@ while True:
             if M["m00"] != 0:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00'])
-                tmpBlueEndPoint = max(np.reshape(c_b, (c_b.shape[0], c_b.shape[2])), key=lambda x: x[1])
                 endPoint = blueEndPoint
                 previousBlueAngle = blueAngle
                 blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
@@ -141,7 +140,6 @@ while True:
             if M["m00"] != 0:
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00']) 
-                tmpYellowEndPoint = max(np.reshape(c_y, (c_y.shape[0], c_y.shape[2])), key=lambda x: x[1])
                 endPoint = yellowEndPoint
                 previousYellowAngle = yellowAngle
                 yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi) 
