@@ -108,8 +108,8 @@ while True:
         blueCut = np.zeros_like(blueMask)
         yellowCut = np.zeros_like(yellowMask)
 
-        cv2.rectangle(blueCut, (0, blueCut.shape[0]), (blueCut.shape[1] * cutoff, blueCut.shape[0] * (1 - cutoff)), 255, -1)
-        cv2.rectangle(yellowCut, (yellowCut.shape[1], yellowCut.shape[0]), (yellowCut.shape[1] * (1 - cutoff), yellowCut.shape[0] * (1 - cutoff)), 255, -1)
+        blueCut = cv2.rectangle(blueCut, (0, blueCut.shape[0]), (round(blueCut.shape[1] * cutoff), round(blueCut.shape[0] * (1 - cutoff))), 255, -1)
+        yellowCut = cv2.rectangle(yellowCut, (yellowCut.shape[1], yellowCut.shape[0]), (round(yellowCut.shape[1] * (1 - cutoff)), round(yellowCut.shape[0] * (1 - cutoff))), 255, -1)
 
         blueMask = cv2.bitwise_and(blueMask, blueMask, mask=blueCut)
         yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=yellowCut)
