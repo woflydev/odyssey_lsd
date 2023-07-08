@@ -181,43 +181,13 @@ def move(RIN, LIN, timeout=0):
         board.digital_write(motorLB,1)
         board.digital_write(motorRA,1)
         board.digital_write(motorRB,1)
+        
     if timeout > 0:
         sleep(timeout / 1000)
         off()
 
-# # input -100 to 100 left and right sides
-# def move(LIN, RIN, timeout=0):
-#     LIN = round(LIN / 5) * 5
-#     RIN = round(RIN / 5) * 5
-#     L = LIN * MAP_CONST  # map values to 0-1
-#     R = RIN * MAP_CONST
-#     #print(L, R)
-#     if L == 0 and R == 0:
-#         off()
-#         brake()
-#     else:
-#         #print(L, R)
-#         if L > 0:
-#             motorPWML.write(abs(L))
-#         else:
-#             motorPWML.write(0)
-#         if R > 0:
-#             motorPWMR.write(abs(R))
-#         else:
-#             motorPWMR.write(0)
-
-#     if timeout > 0:
-#         sleep(timeout / 1000)
-#         off()
-
 def readCurrent():
-    return Isense.read()
+    return board.digital_read(Isense)
 
-# Drive pins other than motor pins
-# def drivePin(pin, val):
-#     if pin == 0 or pin == 1 or pin == 2 or pin == 3:
-#         raise Exception(f"Pin {pin} is used for motors.")
-#     else:
-#         pca.channels[pin].duty_cycle = int(val / 100 * 65535)
-#         print(f"Pin {pin} set to {val}%")
+
 
