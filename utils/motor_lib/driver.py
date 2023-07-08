@@ -108,9 +108,9 @@ def ebrake():
 
 # forward function
 def fwd(speed, timeout=0):
-    board.analog_write(motorPWMLA,speed * MAP_CONST)
+    board.analog_write(motorPWMLA,int(speed * MAP_CONST))
     board.analog_write(motorPWMLB,0)
-    board.analog_write(motorPWMRA,speed * MAP_CONST)
+    board.analog_write(motorPWMRA,int(speed * MAP_CONST))
     board.analog_write(motorPWMRB,0)
 
     board.digital_write(motorLA,1)
@@ -125,9 +125,9 @@ def fwd(speed, timeout=0):
 # reverse function
 def rev(speed, timeout=0):
     board.analog_write(motorPWMLA,0)
-    board.analog_write(motorPWMLB,speed * MAP_CONST)
+    board.analog_write(motorPWMLB,int(speed * MAP_CONST))
     board.analog_write(motorPWMRA,0)
-    board.analog_write(motorPWMRB,speed * MAP_CONST)
+    board.analog_write(motorPWMRB,int(speed * MAP_CONST))
 
     board.digital_write(motorLA,1)
     board.digital_write(motorLB,1)
