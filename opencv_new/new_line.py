@@ -12,8 +12,11 @@ BLUR_KERNEL = 10
 # for testing only [0, 62, 0], [179, 255, 124]
 LOW_BLUE = [101, 106, 130]
 HIGH_BLUE = [179, 255, 255]
+
 LOW_YELLOW = [0, 62, 0]
 HIGH_YELLOW = [179, 255, 124]
+LOW_PURPLE = [117, 139, 27]
+HIGH_PURPLE = [156, 255, 134]
 
 def pwm(speed, theta):
 	try:
@@ -75,6 +78,20 @@ def heading(frame, angle):
     heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
     return heading_image
 
+def weighted_avg(numbers, values):
+    total = 0
+    for i in range(len(numbers)):
+        total += numbers[i] * values[i]
+    return total / sum(values)
+
+def clamp(n, bounds):
+    if n < bounds[0]:
+         return bounds[0]
+    elif n > bounds[1]:
+         return bounds[1]
+    else:
+         return n
+
 cap = cv2.VideoCapture(VIDEO_SOURCE, cv2.CAP_DSHOW)
 input("Press Enter to start analysing frames")
 
@@ -84,7 +101,25 @@ blueLeft = True
 angle = 90
 cutoff = 1/2
 fracOffset = 1/16
-threshold = 10
+obstacleThreshold = 200
+obstacleCorrection = 0
+obstacleCompensation = 0
+obstacleScale = 0.5
+obstacleTurnThreshold = 30
+defaultTurnRight = True
+obstacleBounds = 200
+obstaclePassed = False
+obstacleCorrectionFrames = 0
+
+finalAngleOffset = 0
+
+contourColor = (0, 0, 255)
+obstacleColor = (255, 0, 0)
+lineColor = (0, 255, 0)
+circleColor = (255, 255, 255)
+circleRadius = 5
+lineThickness = 3
+
 while True:
     error = 0
     ret, frame = cap.read()
@@ -99,10 +134,14 @@ while True:
         low_y = np.uint8(LOW_YELLOW)
         high_y = np.uint8(HIGH_YELLOW)
 
+        low_p = np.uint8(LOW_PURPLE)
+        high_p = np.uint8(HIGH_PURPLE)
+
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         blueMask = cv2.inRange(hsv, low_b, high_b)
         yellowMask = cv2.inRange(hsv, low_y, high_y)
+        obstacleMask = cv2.inRange(hsv, low_p, high_p)
 
         # Only focuses on the bottom half or section of the screen as determined by cutoff
         bottomLeft = np.zeros_like(blueMask)
@@ -114,8 +153,10 @@ while True:
         blueMask = cv2.bitwise_and(blueMask, blueMask, mask=bottomLeft if blueLeft else bottomRight)
         yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=bottomRight if blueLeft else bottomLeft)
 
-        blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
-        yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE) # then I used the contours method to introduce the contours in the masked image
+        blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) 
+        yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE)
+        # Used simple here to save memory
+        obstacleContours, hierarchy = cv2.findContours(obstacleMask, 1, cv2.CHAIN_APPROX_SIMPLE)
 
         blueEndPoint = (frame.shape[1] * fracOffset, frame.shape[0])
         yellowEndPoint = ((1 - fracOffset) * frame.shape[1], frame.shape[0])
@@ -133,9 +174,9 @@ while True:
                 endPoint = blueEndPoint
                 previousBlueAngle = blueAngle
                 blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
-                cv2.drawContours(contourFrame, [c_b], 0, (0, 0, 255), 3)
-                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
-                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)     
+                cv2.drawContours(contourFrame, [c_b], 0, contourColor, lineThickness)
+                cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)
+                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), lineColor, lineThickness)     
                 #print(f"Blue steering angle: {blueAngle} degrees")
 
         if len(yellowContours) > 0:
@@ -147,12 +188,67 @@ while True:
                 endPoint = yellowEndPoint
                 previousYellowAngle = yellowAngle
                 yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi) 
-                cv2.drawContours(contourFrame, [c_y], 0, (0, 0, 255), 3)
-                cv2.circle(contourFrame, (cx,cy), 5, (255,255,255), -1)
-                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), (0, 255, 0), 5)       
+                cv2.drawContours(contourFrame, [c_y], 0, contourColor, lineThickness)
+                cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)
+                cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), lineColor, lineThickness)         
                 #print(f"Yellow steering angle: {yellowAngle} degrees")
 
-                
+        obstacleObj = []
+        if len(obstacleContours) > 0:
+            obstacles = filter(lambda c: cv2.contourArea(c) > obstacleThreshold, obstacleContours)
+            cv2.drawContours(contourFrame, obstacles, -1, obstacleColor, lineThickness)
+            for obj in obstacles:
+                M = cv2.moments(obj)
+                if M["m00"] != 0:
+                    cx = int(M['m10']/M['m00'])
+                    cy = int(M['m01']/M['m00'])
+                    obstacleObj.append({"centre": [cx, cy], "contour": obj, "size": cv2.contourArea(obj)})
+                    cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)  
+            obstaclePassed = False
+            obstacleCorrectionFrames += 1
+
+            # Sorts them based on x-coordinate
+            obstacleObj = sorted(obstacleObj, key=lambda obstacle: obstacle["centre"][0])
+            differenceArr = []
+            
+            if len(obstacleObj) > 1:
+                for i in range(len(obstacleObj) - 1):
+                    differenceArr.append(obstacleObj[i+1]["centre"][0] - obstacleObj[i]["centre"][0])
+                    maxDifference = 0
+                    maxIndex = 0
+                    for i in range(len(obstacleObj)):
+                        if differenceArr[i] > maxDifference:
+                            maxDifference = differenceArr[i]
+                            maxIndex = i
+
+                    weights = (obstacleObj[maxIndex + 1]["size"], obstacleObj[maxIndex]["size"])
+                    
+                    # Taking a weighted average of the two adjacent obstacles
+                    point = (weighted_avg([obstacleObj[maxIndex]["centre"][0], obstacleObj[maxIndex + 1]["centre"][0]], weights),
+                                        weighted_avg([obstacleObj[maxIndex]["centre"][1], obstacleObj[maxIndex + 1]["centre"][1]], weights))
+                    obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
+                    finalAngleOffset = obstacleCorrection
+                else:
+                    offset = 0
+                    difference = frame.shape[1] / 2 - obstacleObj[0]["centre"][0]
+                    if abs(difference) > obstacleTurnThreshold:
+                        # Arbitrary such that if the obstacle is far to the right, the car will turn slightly to the left and vice versa. The offset is proportional to how close the obstacle is (obstacleSize) and a variable
+                        offset = -clamp(obstacleScale * obstacleObj[0]["size"] / difference, [-obstacleBounds, obstacleBounds])
+                    else:
+                        offset = clamp((1 if defaultTurnRight else -1) * obstacleScale * obstacleObj[0]["size"], [-obstacleBounds, obstacleBounds])
+                    point = (frame.shape[1] / 2 + offset, frame.shape[0] / 2)
+                    obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
+                    finalAngleOffset = obstacleCorrection
+        else:
+            obstaclePassed = True
+            if obstacleCorrectionFrames > 0:
+                 obstacleCompensation = -obstacleCorrection
+                 obstacleCorrectionFrames -= 1
+            else:
+                 obstacleCompensation = 0
+            finalAngleOffset = obstacleCompensation
+        
+        
 
         if blueAngle is None and yellowAngle is not None:
             if previousYellowAngle is not None:
@@ -163,15 +259,17 @@ while True:
             if previousBlueAngle is not None:
                 angle = stabilize(blueAngle, previousBlueAngle, 1)
             else:
-                angle = blueAngle
+                angle = yellowAngle
         elif blueAngle is not None and yellowAngle is not None:
             if previousBlueAngle is not None and previousYellowAngle is not None:
-                angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2, 2)
+                angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2)
             else:
                 angle = (blueAngle + yellowAngle) / 2
         else:
             print("give up lol")
             angle = 90
+        # Adds obstacle avoidance
+        angle += finalAngleOffset
         
         heading_img = heading(contourFrame, angle)
 
@@ -180,7 +278,6 @@ while True:
         show("Frame", frame, SHOW_IMAGES)
         show("Contours", contourFrame, SHOW_IMAGES)
         show("Heading", heading_img, SHOW_IMAGES)
-        
 
         print(f"Steering angle: {angle} degrees")
 
@@ -191,7 +288,7 @@ while True:
         if right < 0:
             right = 0
 
-        print(f"Left: {round(left)}, Right: {round(right)}")
+        print(f"Left: {left}, Right: {right}")
 
         time.sleep(0.005)
 
