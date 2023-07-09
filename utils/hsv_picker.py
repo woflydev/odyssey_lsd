@@ -26,7 +26,7 @@ def returnFrame(videoBool=USE_VIDEO):
         return cap.read()[1]
     else:
         return img"""
-img = cv2.imread("data/hsv10.png")
+img = cv2.imread("data/test1.png")
 def returnFrame():
     return img
     #return cap.read()[1]

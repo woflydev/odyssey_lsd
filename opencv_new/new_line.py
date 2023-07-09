@@ -3,7 +3,8 @@ import numpy as np
 import time
 import math
 
-VIDEO_SOURCE = 0    
+#VIDEO_SOURCE = 0
+VIDEO_SOURCE = "data/TestTrack.mp4"    
 
 SHOW_IMAGES = False
 WRITE_IMAGES = True
@@ -264,7 +265,7 @@ while True:
 						if previousYellowAngle is not None:
 								angle = stabilize(yellowAngle, previousYellowAngle, 1)
 						else:
-								angle = yellowAngle
+								angle = blueAngle
 				elif yellowAngle is None and blueAngle is not None:
 						if previousBlueAngle is not None:
 								angle = stabilize(blueAngle, previousBlueAngle, 1)
