@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 import math
-from ..utils.motor_lib.driver import move, off
+from utils.motor_lib.driver import move, off
 
 VIDEO_SOURCE = 0    
 
