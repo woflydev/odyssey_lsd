@@ -3,13 +3,13 @@ import numpy as np
 import time
 import math
 
-VIDEO_SOURCE = 0    
+VIDEO_SOURCE = 0
 
 SHOW_IMAGES = True
 BASE_SPEED = 30
 
 BLUR_KERNEL = 10
-# for testing only [0, 62, 0], [179, 255, 124]
+# enochs house [0, 62, 0], [179, 255, 124]
 LOW_BLUE = [101, 106, 130]
 HIGH_BLUE = [179, 255, 255]
 
@@ -247,8 +247,6 @@ while True:
             else:
                  obstacleCompensation = 0
             finalAngleOffset = obstacleCompensation
-        
-        
 
         if blueAngle is None and yellowAngle is not None:
             if previousYellowAngle is not None:
