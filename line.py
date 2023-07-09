@@ -2,7 +2,12 @@ import cv2
 import numpy as np
 import time
 import math
-from utils.motor_lib.driver import move, off
+try:
+	from utils.motor_lib.driver import move, off
+	DRIVER_INITIALIZED = True
+except:
+	print("MOTOR DRIVER NOT INITIALIZED! RUNNING ANYWAY...")
+	DRIVER_INITIALIZED = False
 
 VIDEO_SOURCE = 0    
 
@@ -307,7 +312,7 @@ while True:
 						right = 0
 
 				print(f"Left: {left}, Right: {right}")
-				move(left,right)
+				move(left, right) if DRIVER_INITIALIZED else print("MOTOR WRITE FAILED DUE TO UNAVAILABLE DRIVER.")
 				time.sleep(0.005)
 
 		try:
