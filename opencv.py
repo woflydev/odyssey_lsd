@@ -107,7 +107,7 @@ def detect_edges(frame):
 	#lower_yellow = np.array([0, 0, 255])
 	#upper_yellow = np.array([53, 76, 255])
 
-	#LOWER_MASK = np.array([0, 62, 0], np.uint8)
+	#LOWER_MASK = np.array([0, 62, 0], np.uint8) #enochs house
 	#UPPER_MASK = np.array([179, 255, 124], np.uint8)
 	LOWER_MASK = np.array([0, 146, 0], np.uint8) #ermias house
 	UPPER_MASK = np.array([179, 210, 255], np.uint8)
