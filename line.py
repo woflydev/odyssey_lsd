@@ -2,12 +2,13 @@ import cv2
 import numpy as np
 import time
 import math
+
+DRIVER_INITIALISED = False
 try:
 	from utils.motor_lib.driver import move, off
 	DRIVER_INITIALIZED = True
 except:
 	print("MOTOR DRIVER NOT INITIALIZED! RUNNING ANYWAY...")
-	DRIVER_INITIALIZED = False
 
 VIDEO_SOURCE = 0    
 
