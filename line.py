@@ -210,7 +210,7 @@ while True:
 								cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), lineColor, lineThickness)         
 								#print(f"Yellow steering angle: {yellowAngle} degrees")
 
-				obstacleObj = []
+				'''obstacleObj = []
 				if len(obstacleContours) > 0:
 						obstacles = list(filter(lambda c: cv2.contourArea(c) > obstacleThreshold, obstacleContours))
 						cv2.drawContours(contourFrame, obstacles, -1, obstacleColor, lineThickness)
@@ -263,7 +263,7 @@ while True:
 								obstacleCorrectionFrames -= 1
 						else:
 								obstacleCompensation = 0
-						finalAngleOffset = obstacleCompensation
+						finalAngleOffset = obstacleCompensation'''
 				
 				
 
@@ -286,7 +286,7 @@ while True:
 						print("give up lol")
 						angle = 90
 				# Adds obstacle avoidance
-				angle += finalAngleOffset
+				#angle += finalAngleOffset
 				
 				heading_img = heading(contourFrame, angle)
 
