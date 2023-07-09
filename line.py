@@ -2,12 +2,7 @@ import cv2
 import numpy as np
 import time
 import math
-try:
-	from utils.motor_lib.driver import move, off
-	DRIVER_INITIALIZED = True
-except:
-	print("MOTOR DRIVER NOT INITIALIZED! RUNNING ANYWAY...")
-	DRIVER_INITIALIZED = False
+from utils.motor_lib.driver import move, off
 
 VIDEO_SOURCE = 0    
 
@@ -90,6 +85,12 @@ def heading(frame, angle):
 		y1 = height
 		x2 = int(x1 - height / 2 / math.tan(radians))
 		y2 = int(height / 2)
+		if radians == 0:
+			x2 = 0
+			y2 = height
+		elif radians == math.pi:
+			x2 = width
+			y2 = height
 
 		cv2.line(heading_image, (x1, y1), (x2, y2), (0, 0, 255), 10)
 		heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
@@ -312,7 +313,7 @@ while True:
 						right = 0
 
 				print(f"Left: {left}, Right: {right}")
-				move(left, right) if DRIVER_INITIALIZED else print("MOTOR WRITE FAILED DUE TO UNAVAILABLE DRIVER.")
+				move(left,right)
 				time.sleep(0.005)
 
 		try:
