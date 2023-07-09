@@ -70,7 +70,7 @@ def show(window_name, frame):
 	if SHOW_IMAGES:
 		cv2.imshow(window_name, frame)
 	if WRITE_IMAGES:
-		cv2.imwrite(f"camera.{window_name}.test.png")
+		cv2.imwrite(f"camera.{window_name}.test.png", frame)
 
 def heading(frame, angle):
 		heading_image = np.zeros_like(frame)
