@@ -22,7 +22,7 @@ OBSTACLE_BLUR = 30
 # LOW_BLUE = [101, 106, 130]
 # HIGH_BLUE = [179, 255, 255]
 
-# LOW_YELLOW = [0, 62, 0]
+# LOW_YELLOW = [0, 62, 0] enochs house
 # HIGH_YELLOW = [179, 255, 124]
 
 LOW_BLUE = [0, 146, 0]
