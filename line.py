@@ -11,6 +11,7 @@ WRITE_IMAGES = True
 BASE_SPEED = 30
 
 BLUR_KERNEL = 10
+OBSTACLE_BLUR = 30
 # for testing only [0, 62, 0], [179, 255, 124]
 # LOW_BLUE = [101, 106, 130]
 # HIGH_BLUE = [179, 255, 255]
@@ -112,6 +113,8 @@ blueLeft = True
 angle = 90
 cutoff = 1/2
 fracOffset = 1/16
+
+
 obstacleThreshold = 200
 obstacleCorrection = 0
 obstacleCompensation = 0
@@ -136,8 +139,10 @@ while True:
 		ret, frame = cap.read()
 
 		if ret:
-				frame = cv2.blur(frame, (BLUR_KERNEL, BLUR_KERNEL))
+				originalFrame = np.copy(frame)
 				contourFrame = np.copy(frame)
+				frame = cv2.blur(originalFrame, (BLUR_KERNEL, BLUR_KERNEL))
+				obstacleFrame = cv2.blur(originalFrame, (OBSTACLE_BLUR, OBSTACLE_BLUR))
 
 				low_b = np.uint8(LOW_BLUE)
 				high_b = np.uint8(HIGH_BLUE)
@@ -149,10 +154,11 @@ while True:
 				high_p = np.uint8(HIGH_PURPLE)
 
 				hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+				obstacleHSV = cv2.cvtColor(obstacleFrame, cv2.COLOR_BGR2HSV)
 
 				blueMask = cv2.inRange(hsv, low_b, high_b)
 				yellowMask = cv2.inRange(hsv, low_y, high_y)
-				obstacleMask = cv2.inRange(hsv, low_p, high_p)
+				obstacleMask = cv2.inRange(obstacleHSV, low_p, high_p)
 
 				# Only focuses on the bottom half or section of the screen as determined by cutoff
 				bottomLeft = np.zeros_like(blueMask)
@@ -225,31 +231,31 @@ while True:
 						if len(obstacleObj) > 1:
 								for i in range(len(obstacleObj) - 1):
 										differenceArr.append(obstacleObj[i+1]["centre"][0] - obstacleObj[i]["centre"][0])
-										maxDifference = 0
-										maxIndex = 0
-										for i in range(len(obstacleObj)):
-												if differenceArr[i] > maxDifference:
-														maxDifference = differenceArr[i]
-														maxIndex = i
+								maxDifference = 0
+								maxIndex = 0
+								for i in range(len(differenceArr)):
+										if differenceArr[i] > maxDifference:
+												maxDifference = differenceArr[i]
+												maxIndex = i
 
-										weights = (obstacleObj[maxIndex + 1]["size"], obstacleObj[maxIndex]["size"])
-										
-										# Taking a weighted average of the two adjacent obstacles
-										point = (weighted_avg([obstacleObj[maxIndex]["centre"][0], obstacleObj[maxIndex + 1]["centre"][0]], weights),
-																				weighted_avg([obstacleObj[maxIndex]["centre"][1], obstacleObj[maxIndex + 1]["centre"][1]], weights))
-										obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
-										finalAngleOffset = obstacleCorrection
+								weights = (obstacleObj[maxIndex + 1]["size"], obstacleObj[maxIndex]["size"])
+								
+								# Taking a weighted average of the two adjacent obstacles
+								point = (weighted_avg([obstacleObj[maxIndex]["centre"][0], obstacleObj[maxIndex + 1]["centre"][0]], weights),
+																		weighted_avg([obstacleObj[maxIndex]["centre"][1], obstacleObj[maxIndex + 1]["centre"][1]], weights))
+								obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
+								finalAngleOffset = obstacleCorrection
+						else:
+								offset = 0
+								difference = frame.shape[1] / 2 - obstacleObj[0]["centre"][0]
+								if abs(difference) > obstacleTurnThreshold:
+										# Arbitrary such that if the obstacle is far to the right, the car will turn slightly to the left and vice versa. The offset is proportional to how close the obstacle is (obstacleSize) and a variable
+										offset = -clamp(obstacleScale * obstacleObj[0]["size"] / difference, [-obstacleBounds, obstacleBounds])
 								else:
-										offset = 0
-										difference = frame.shape[1] / 2 - obstacleObj[0]["centre"][0]
-										if abs(difference) > obstacleTurnThreshold:
-												# Arbitrary such that if the obstacle is far to the right, the car will turn slightly to the left and vice versa. The offset is proportional to how close the obstacle is (obstacleSize) and a variable
-												offset = -clamp(obstacleScale * obstacleObj[0]["size"] / difference, [-obstacleBounds, obstacleBounds])
-										else:
-												offset = clamp((1 if defaultTurnRight else -1) * obstacleScale * obstacleObj[0]["size"], [-obstacleBounds, obstacleBounds])
-										point = (frame.shape[1] / 2 + offset, frame.shape[0] / 2)
-										obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
-										finalAngleOffset = obstacleCorrection
+										offset = clamp((1 if defaultTurnRight else -1) * obstacleScale * obstacleObj[0]["size"], [-obstacleBounds, obstacleBounds])
+								point = (frame.shape[1] / 2 + offset, frame.shape[0] / 2)
+								obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
+								finalAngleOffset = obstacleCorrection
 				else:
 						obstaclePassed = True
 						if obstacleCorrectionFrames > 0:
