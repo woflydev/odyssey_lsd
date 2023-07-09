@@ -34,7 +34,7 @@ def exit_handler(signal, frame):
     board.shutdown()
     sys.exit(0)
 
-signal.signal(signal.SIGINT, exit_handler)
+#signal.signal(signal.SIGINT, exit_handler)
 
 board = telemetrix.Telemetrix()
 print("Communication Successfully started")

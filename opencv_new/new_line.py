@@ -3,18 +3,25 @@ import numpy as np
 import time
 import math
 
-VIDEO_SOURCE = 0
+VIDEO_SOURCE = 0    
 
-SHOW_IMAGES = True
+SHOW_IMAGES = False
 BASE_SPEED = 30
 
 BLUR_KERNEL = 10
-# enochs house [0, 62, 0], [179, 255, 124]
-LOW_BLUE = [101, 106, 130]
-HIGH_BLUE = [179, 255, 255]
+# for testing only [0, 62, 0], [179, 255, 124]
+# LOW_BLUE = [101, 106, 130]
+# HIGH_BLUE = [179, 255, 255]
 
-LOW_YELLOW = [0, 62, 0]
-HIGH_YELLOW = [179, 255, 124]
+# LOW_YELLOW = [0, 62, 0]
+# HIGH_YELLOW = [179, 255, 124]
+
+LOW_BLUE = [0, 146, 0]
+HIGH_BLUE = [179, 210, 255]
+
+LOW_YELLOW = [0, 146, 0]
+HIGH_YELLOW = [179, 210, 255]
+
 LOW_PURPLE = [117, 139, 27]
 HIGH_PURPLE = [156, 255, 134]
 
@@ -92,7 +99,7 @@ def clamp(n, bounds):
     else:
          return n
 
-cap = cv2.VideoCapture(VIDEO_SOURCE, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(VIDEO_SOURCE)
 input("Press Enter to start analysing frames")
 
 previousYellowAngle = None
@@ -247,6 +254,8 @@ while True:
             else:
                  obstacleCompensation = 0
             finalAngleOffset = obstacleCompensation
+        
+        
 
         if blueAngle is None and yellowAngle is not None:
             if previousYellowAngle is not None:
