@@ -47,7 +47,7 @@ def pwm(speed, theta):
 	except:
 		print('Unable to calculate PWM! (Most commonly from division by zero)')
 
-def stabilize(current, new, num_lanes, max_confident_deviation=8, max_unsure_deviation=4):
+def stabilize(current, new, num_lanes, max_confident_deviation=16, max_unsure_deviation=8):
 	"""
 	Using last steering angle to stabilize the steering angle
 	This can be improved to use last N angles, etc
