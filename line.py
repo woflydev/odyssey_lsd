@@ -4,10 +4,10 @@ import time
 import math
 try:
 	from utils.motor_lib.driver import move, off
-	DRIVER_INITIALIZED = True
+	DRIVER_INITIALIZED:bool = True
 except:
 	print("MOTOR DRIVER NOT INITIALIZED! RUNNING ANYWAY...")
-	DRIVER_INITIALIZED = False
+	DRIVER_INITIALIZED:bool = False
 
 VIDEO_SOURCE = 0
 
