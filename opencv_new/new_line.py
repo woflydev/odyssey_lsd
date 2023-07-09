@@ -4,8 +4,8 @@ import time
 import math
 from ..utils.motor_lib.driver import move, off
 
-#VIDEO_SOURCE = 0
-VIDEO_SOURCE = "data/TestTrack.mp4"    
+VIDEO_SOURCE = 0
+#VIDEO_SOURCE = "data/TestTrack.mp4"    
 
 SHOW_IMAGES = False
 WRITE_IMAGES = True
