@@ -257,7 +257,7 @@ while True:
 																		weighted_avg([obstacleObj[maxIndex]["centre"][1], obstacleObj[maxIndex + 1]["centre"][1]], weights))
 								obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
 								finalAngleOffset = obstacleCorrection
-						else:
+						elif len(obstacleObj) == 1:
 								offset = 0
 								difference = frame.shape[1] / 2 - obstacleObj[0]["centre"][0]
 								if abs(difference) > obstacleTurnThreshold:
@@ -268,6 +268,8 @@ while True:
 								point = (frame.shape[1] / 2 + offset, frame.shape[0] / 2)
 								obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
 								finalAngleOffset = obstacleCorrection
+						else:
+							finalAngleOffset = 0
 				else:
 						obstaclePassed = True
 						if obstacleCorrectionFrames > 0:
