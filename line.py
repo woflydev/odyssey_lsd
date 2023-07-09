@@ -3,7 +3,7 @@ import numpy as np
 import time
 import math
 
-DRIVER_INITIALISED = False
+DRIVER_INITIALIZED = False
 try:
 	from utils.motor_lib.driver import move, off
 	DRIVER_INITIALIZED = True
