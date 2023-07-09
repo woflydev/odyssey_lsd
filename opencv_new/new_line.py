@@ -206,7 +206,7 @@ while True:
 
 				obstacleObj = []
 				if len(obstacleContours) > 0:
-						obstacles = filter(lambda c: cv2.contourArea(c) > obstacleThreshold, obstacleContours)
+						obstacles = list(filter(lambda c: cv2.contourArea(c) > obstacleThreshold, obstacleContours))
 						cv2.drawContours(contourFrame, obstacles, -1, obstacleColor, lineThickness)
 						for obj in obstacles:
 								M = cv2.moments(obj)
