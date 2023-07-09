@@ -313,7 +313,7 @@ while True:
 						right = 0
 
 				print(f"Left: {left}, Right: {right}")
-				move(left,right)
+				move(left, right) if DRIVER_INITIALIZED else 0
 				time.sleep(0.005)
 
 		try:
