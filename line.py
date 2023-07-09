@@ -2,10 +2,9 @@ import cv2
 import numpy as np
 import time
 import math
-from ..utils.motor_lib.driver import move, off
+from utils.motor_lib.driver import move, off
 
-#VIDEO_SOURCE = 0
-VIDEO_SOURCE = "data/TestTrack.mp4"    
+VIDEO_SOURCE = 0    
 
 SHOW_IMAGES = False
 WRITE_IMAGES = True
@@ -71,7 +70,7 @@ def show(window_name, frame):
 	if SHOW_IMAGES:
 		cv2.imshow(window_name, frame)
 	if WRITE_IMAGES:
-		cv2.imwrite(f"camera.{window_name}.test.png")
+		cv2.imwrite(f"camera.{window_name}.test.png", frame)
 
 def heading(frame, angle):
 		heading_image = np.zeros_like(frame)
@@ -207,7 +206,7 @@ while True:
 
 				obstacleObj = []
 				if len(obstacleContours) > 0:
-						obstacles = list(filter(lambda c: cv2.contourArea(c) > obstacleThreshold, obstacleContours))
+						obstacles = filter(lambda c: cv2.contourArea(c) > obstacleThreshold, obstacleContours)
 						cv2.drawContours(contourFrame, obstacles, -1, obstacleColor, lineThickness)
 						for obj in obstacles:
 								M = cv2.moments(obj)
@@ -266,7 +265,7 @@ while True:
 						if previousYellowAngle is not None:
 								angle = stabilize(yellowAngle, previousYellowAngle, 1)
 						else:
-								angle = blueAngle
+								angle = yellowAngle
 				elif yellowAngle is None and blueAngle is not None:
 						if previousBlueAngle is not None:
 								angle = stabilize(blueAngle, previousBlueAngle, 1)
