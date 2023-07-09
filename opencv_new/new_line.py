@@ -287,6 +287,7 @@ while True:
 
 				show("Blue Mask", blueMask)
 				show("Yellow Mask", yellowMask)
+				show("Obstacle Mask", obstacleMask)
 				show("Frame", frame)
 				show("Contours", contourFrame)
 				show("Heading", heading_img)
