@@ -36,11 +36,11 @@ HIGH_BLUE = [122, 255, 255]'''
 '''LOW_YELLOW = [0, 0, 219] #school track morning
 HIGH_YELLOW = [100, 53, 255]'''
 
-LOW_BLUE = [62, 92, 132]
-HIGH_BLUE = [104, 255, 255]
+LOW_BLUE = [83, 60, 83]
+HIGH_BLUE = [109, 255, 255]
 
-LOW_YELLOW = [0, 0, 241]
-HIGH_YELLOW = [36, 93, 255]
+LOW_YELLOW = [0, 0, 157] #school track
+HIGH_YELLOW = [179, 57, 255]
 
 LOW_PURPLE = [117, 139, 27]
 HIGH_PURPLE = [156, 255, 134]
@@ -197,12 +197,13 @@ blueLeft = True
 angle = 90
 cutoffConstant = 1/2
 fracOffset = 1/16
-horizontalSlopeThreshold = 0.3
-horizontalLengthThreshold = 100
+horizontalSlopeThreshold = 0.15
+horizontalLengthThreshold = 125
 cannyMin = 200
 cannyMax = 400
 uTurnForwardSpeed = 1.3
 uTurnBackSpeed = -0.25
+otherNone = False
 
 obstacleThreshold = 200
 obstacleCorrection = 0
@@ -431,11 +432,11 @@ while True:
 				if right < 0:
 						right = 0
 
-				if detect_uturn(blueFit) and yellowAngle is None:
+				if detect_uturn(blueFit) and (yellowAngle is None or (not otherNone)):
 					left = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
 					right = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
 					print("Blue U-turn detected!")
-				elif detect_uturn(yellowFit) and blueAngle is None:
+				elif detect_uturn(yellowFit) and (blueAngle is None or (not otherNone)):
 					left = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
 					right = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
 					print("Yellow U-turn detected")
