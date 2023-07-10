@@ -45,8 +45,8 @@ HIGH_YELLOW = [100, 53, 255]'''
 LOW_BLUE = [63, 145, 89] # qut track
 HIGH_BLUE = [137, 255, 255]
 
-LOW_YELLOW = [20, 127, 127] # qut track
-HIGH_YELLOW = [36, 255, 255]
+LOW_YELLOW = [0, 66, 187] # qut track
+HIGH_YELLOW = [46, 255, 255]
 
 LOW_PURPLE = [117, 139, 27]
 HIGH_PURPLE = [156, 255, 134]
@@ -64,7 +64,7 @@ def pwm(speed, theta):
 	except:
 		print('Unable to calculate PWM! (Most commonly from division by zero)')
 
-def stabilize(current, new, num_lanes, max_confident_deviation=2,max_unsure_deviation=1):
+def stabilize(current, new, num_lanes, max_confident_deviation=3,max_unsure_deviation=1.5):
 	"""
 	Using last steering angle to stabilize the steering angle
 	This can be improved to use last N angles, etc
@@ -176,9 +176,6 @@ def heading(frame, angle):
 		heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
 		return heading_image
 
-def avg(numbers):
-	return sum(numbers) / len(numbers)
-
 def weighted_avg(numbers, values):
 		total = 0
 		for i in range(len(numbers)):
@@ -204,7 +201,7 @@ previousYellowAngle = None
 previousBlueAngle = None
 blueLeft = True
 angle = 90
-cutoffConstant = 2/3
+cutoffConstant = 1/2
 fracOffset = 1/16
 horizontalSlopeThreshold = 0.15
 horizontalLengthThreshold = 125
@@ -394,7 +391,7 @@ while True:
 						previousBlueAngle = blueAngle
 				elif blueAngle is not None and yellowAngle is not None:
 						if previousBlueAngle is not None and previousYellowAngle is not None:
-								angle = stabilize(avg([blueAngle, yellowAngle]), avg([previousBlueAngle, previousYellowAngle]), 2)
+								angle = stabilize((blueAngle + yellowAngle) / 2, (previousBlueAngle + previousYellowAngle) / 2, 2)
 								#print("Stabilising")
 						else:
 								angle = (blueAngle + yellowAngle) / 2
@@ -461,14 +458,10 @@ while True:
 
 		try:
 				if cv2.waitKey(1) & 0xff == ord('q'):
-						off()
 						break
-		except:
-				print("something happened you donkey, fix your code.")
-				off()
+		except KeyboardInterrupt:
 				pass
 
-off()
 cap.release()
 cv2.destroyAllWindows()
 exit(0)
