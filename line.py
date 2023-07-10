@@ -226,14 +226,6 @@ otherNone = False
 overrideArea = 20
 
 obstacleThreshold = 200
-obstacleCorrection = 0
-obstacleCompensation = 0
-obstacleScale = 0.5
-obstacleTurnThreshold = 30
-defaultTurnRight = True
-obstacleBounds = 200
-obstaclePassed = False
-obstacleCorrectionFrames = 0
 
 finalAngleOffset = 0
 
@@ -328,63 +320,27 @@ try:
 					else:
 						yellowAngle = None
 
-
-					'''obstacleObj = []
 					if len(obstacleContours) > 0:
-							obstacles = list(filter(lambda c: cv2.contourArea(c) > obstacleThreshold, obstacleContours))
-							cv2.drawContours(contourFrame, obstacles, -1, obstacleColor, lineThickness)
-							for obj in obstacles:
-									M = cv2.moments(obj)
-									if M["m00"] != 0:
-											cx = int(M['m10']/M['m00'])
-											cy = int(M['m01']/M['m00'])
-											obstacleObj.append({"centre": [cx, cy], "contour": obj, "size": cv2.contourArea(obj)})
-											cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)  
-							obstaclePassed = False
-							obstacleCorrectionFrames += 1
-
-							# Sorts them based on x-coordinate
-							obstacleObj = sorted(obstacleObj, key=lambda obstacle: obstacle["centre"][0])
-							differenceArr = []
-							
-							if len(obstacleObj) > 1:
-									for i in range(len(obstacleObj) - 1):
-											differenceArr.append(obstacleObj[i+1]["centre"][0] - obstacleObj[i]["centre"][0])
-									maxDifference = 0
-									maxIndex = 0
-									for i in range(len(differenceArr)):
-											if differenceArr[i] > maxDifference:
-													maxDifference = differenceArr[i]
-													maxIndex = i
-
-									weights = (obstacleObj[maxIndex + 1]["size"], obstacleObj[maxIndex]["size"])
-									
-									# Taking a weighted average of the two adjacent obstacles
-									point = (weighted_avg([obstacleObj[maxIndex]["centre"][0], obstacleObj[maxIndex + 1]["centre"][0]], weights),
-																			weighted_avg([obstacleObj[maxIndex]["centre"][1], obstacleObj[maxIndex + 1]["centre"][1]], weights))
-									obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
-									finalAngleOffset = obstacleCorrection
-							elif len(obstacleObj) == 1:
-									offset = 0
-									difference = frame.shape[1] / 2 - obstacleObj[0]["centre"][0]
-									if abs(difference) > obstacleTurnThreshold:
-											# Arbitrary such that if the obstacle is far to the right, the car will turn slightly to the left and vice versa. The offset is proportional to how close the obstacle is (obstacleSize) and a variable
-											offset = -clamp(obstacleScale * obstacleObj[0]["size"] / difference, [-obstacleBounds, obstacleBounds])
+						obstacle = max(obstacleContours, key=cv2.contourArea)
+						if (cv2.contourArea(obstacle) > obstacleThreshold):
+							M = cv2.moments(obstacle)
+							if M["m00"] != 0:
+								cx = int(M['m10']/M['m00'])
+								cy = int(M['m01']/M['m00'])
+								cv2.drawContours(contourFrame, [obstacle], 0, obstacleColor, lineThickness)
+								cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)
+								if cx > frame.shape[1] / 2:
+									endPoint = rightEndPoint
+									if blueLeft:
+										blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
 									else:
-											offset = clamp((1 if defaultTurnRight else -1) * obstacleScale * obstacleObj[0]["size"], [-obstacleBounds, obstacleBounds])
-									point = (frame.shape[1] / 2 + offset, frame.shape[0] / 2)
-									obstacleCorrection = 180 - round(np.arctan2(point[1], point[0] - frame.shape[1] / 2) * 180 / np.pi)
-									finalAngleOffset = obstacleCorrection
-							else:
-								finalAngleOffset = 0
-					else:
-							obstaclePassed = True
-							if obstacleCorrectionFrames > 0:
-									obstacleCompensation = -obstacleCorrection
-									obstacleCorrectionFrames -= 1
-							else:
-									obstacleCompensation = 0
-							finalAngleOffset = obstacleCompensation'''
+										yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
+								else:
+									endPoint = leftEndPoint
+									if blueLeft:
+										yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
+									else:
+										blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
 					
 					print(f"Blue angle: {blueAngle}, Yellow angle: {yellowAngle}")
 
