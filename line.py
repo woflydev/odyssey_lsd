@@ -27,14 +27,20 @@ OBSTACLE_BLUR = 30
 # LOW_YELLOW = [0, 62, 0] #enochs house
 # HIGH_YELLOW = [179, 255, 124]
 
-LOW_BLUE = [89, 174, 174]
-HIGH_BLUE = [122, 255, 255]
+'''LOW_BLUE = [89, 174, 174] #school track morning
+HIGH_BLUE = [122, 255, 255]'''
 
 #LOW_YELLOW = [0, 146, 0] #ermias house
 #HIGH_YELLOW = [179, 210, 255]
 
-LOW_YELLOW = [0, 0, 219] #school track
-HIGH_YELLOW = [100, 53, 255]
+'''LOW_YELLOW = [0, 0, 219] #school track morning
+HIGH_YELLOW = [100, 53, 255]'''
+
+LOW_BLUE = [62, 92, 132]
+HIGH_BLUE = [104, 255, 255]
+
+LOW_YELLOW = [0, 0, 241]
+HIGH_YELLOW = [36, 93, 255]
 
 LOW_PURPLE = [117, 139, 27]
 HIGH_PURPLE = [156, 255, 134]
@@ -52,7 +58,7 @@ def pwm(speed, theta):
 	except:
 		print('Unable to calculate PWM! (Most commonly from division by zero)')
 
-def stabilize(current, new, num_lanes, max_confident_deviation=4,max_unsure_deviation=2):
+def stabilize(current, new, num_lanes, max_confident_deviation=3,max_unsure_deviation=1.5):
 	"""
 	Using last steering angle to stabilize the steering angle
 	This can be improved to use last N angles, etc
@@ -195,8 +201,8 @@ horizontalSlopeThreshold = 0.3
 horizontalLengthThreshold = 100
 cannyMin = 200
 cannyMax = 400
-uTurnForwardSpeed = 1.25
-uTurnBackSpeed = -0.1
+uTurnForwardSpeed = 1.3
+uTurnBackSpeed = -0.25
 
 obstacleThreshold = 200
 obstacleCorrection = 0
@@ -425,11 +431,11 @@ while True:
 				if right < 0:
 						right = 0
 
-				if detect_uturn(blueFit):
+				if detect_uturn(blueFit) and yellowAngle is None:
 					left = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
 					right = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
 					print("Blue U-turn detected!")
-				elif detect_uturn(yellowFit):
+				elif detect_uturn(yellowFit) and blueAngle is None:
 					left = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
 					right = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
 					print("Yellow U-turn detected")
