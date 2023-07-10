@@ -204,6 +204,7 @@ cannyMax = 400
 uTurnForwardSpeed = 1.3
 uTurnBackSpeed = -0.25
 otherNone = False
+overrideArea = 20
 
 obstacleThreshold = 200
 obstacleCorrection = 0
@@ -432,14 +433,18 @@ while True:
 				if right < 0:
 						right = 0
 
-				if detect_uturn(blueFit) and (yellowAngle is None or (not otherNone)):
-					left = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
-					right = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
-					print("Blue U-turn detected!")
-				elif detect_uturn(yellowFit) and (blueAngle is None or (not otherNone)):
-					left = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
-					right = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
-					print("Yellow U-turn detected")
+				if detect_uturn(blueFit):
+					if len(yellowContours) > 0:
+						if (cv2.contourArea(max(yellowContours, key=cv2.contourArea)) < overrideArea or (not otherNone)):
+							left = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
+							right = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
+							print("Blue U-turn detected!")
+				elif detect_uturn(yellowFit):
+					if len(blueContours) > 0:
+						if (cv2.contourArea(max(blueContours, key=cv2.contourArea)) < overrideArea or (not otherNone)):
+							left = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
+							right = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
+							print("Yellow U-turn detected")
 
 				print(f"Left: {left}, Right: {right}")
 				move(left, right) if DRIVER_INITIALIZED else 0
