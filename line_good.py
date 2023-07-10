@@ -5,7 +5,7 @@ import math
 
 DRIVER_INITIALIZED = False
 try:
-	from utils.motor_lib.driver import move, off
+	from utils.motor_lib.driver import move, off, exit_handler
 	DRIVER_INITIALIZED = True
 except:
 	print("MOTOR DRIVER NOT INITIALIZED! RUNNING ANYWAY...")
@@ -14,7 +14,7 @@ VIDEO_SOURCE = 0
 
 SHOW_IMAGES = False
 WRITE_IMAGES = True
-BASE_SPEED = 40
+BASE_SPEED = 50
 
 BLUR_KERNEL = 5
 OBSTACLE_BLUR = 30
@@ -56,14 +56,12 @@ def stabilize(current, new, num_lanes, max_confident_deviation=16, max_unsure_de
 	This can be improved to use last N angles, etc
 	if new angle is too different from current angle, only turn by max_angle_deviation degrees
 	"""
-	deviationScale = 20 / BASE_SPEED
-
 	if num_lanes == 2:
 		# if both lane lines detected, then we can deviate more
-		max_angle_deviation = max_confident_deviation * deviationScale
+		max_angle_deviation = max_confident_deviation
 	elif num_lanes == 1:
 		# if only one lane detected, don't deviate too much
-		max_angle_deviation = max_unsure_deviation * deviationScale
+		max_angle_deviation = max_unsure_deviation
 	else:
 		max_angle_deviation = 2
 	#elif num_lanes == 0:
@@ -129,7 +127,6 @@ input("Press Enter to start analysing frames")
 previousYellowAngle = None
 previousBlueAngle = None
 blueLeft = True
-orientationDependent = False
 angle = 90
 cutoff = 1/2
 fracOffset = 1/16
@@ -183,8 +180,8 @@ while True:
 				bottomLeft = np.zeros_like(blueMask)
 				bottomRight = np.zeros_like(yellowMask)
 
-				bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff) if orientationDependent else bottomLeft.shape[1], round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
-				bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff) if orientationDependent else 0), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
+				bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff), round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
+				bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff)), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
 
 				blueMask = cv2.bitwise_and(blueMask, blueMask, mask=bottomLeft if blueLeft else bottomRight)
 				yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=bottomRight if blueLeft else bottomLeft)
@@ -336,6 +333,8 @@ while True:
 						break
 		except KeyboardInterrupt:
 				pass
+
+off()
 
 cap.release()
 cv2.destroyAllWindows()
