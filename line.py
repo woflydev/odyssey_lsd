@@ -129,7 +129,6 @@ input("Press Enter to start analysing frames")
 previousYellowAngle = None
 previousBlueAngle = None
 blueLeft = True
-orientationDependent = False
 angle = 90
 cutoff = 1/2
 fracOffset = 1/16
@@ -183,8 +182,8 @@ while True:
 				bottomLeft = np.zeros_like(blueMask)
 				bottomRight = np.zeros_like(yellowMask)
 
-				bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff) if orientationDependent else bottomLeft.shape[1], round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
-				bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff) if orientationDependent else 0), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
+				bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff), round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
+				bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff)), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
 
 				blueMask = cv2.bitwise_and(blueMask, blueMask, mask=bottomLeft if blueLeft else bottomRight)
 				yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=bottomRight if blueLeft else bottomLeft)
