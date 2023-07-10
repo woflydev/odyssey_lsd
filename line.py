@@ -25,11 +25,11 @@ OBSTACLE_BLUR = 30
 # LOW_YELLOW = [0, 62, 0] enochs house
 # HIGH_YELLOW = [179, 255, 124]
 
-LOW_BLUE = [0, 146, 0]
-HIGH_BLUE = [179, 210, 255]
+LOW_BLUE = [0, 0, 255]
+HIGH_BLUE = [179, 255, 255]
 
-LOW_YELLOW = [0, 146, 0]
-HIGH_YELLOW = [179, 210, 255]
+LOW_YELLOW = [0, 0, 255]
+HIGH_YELLOW = [179, 255, 255]
 
 LOW_PURPLE = [117, 139, 27]
 HIGH_PURPLE = [156, 255, 134]
@@ -89,7 +89,7 @@ def heading(frame, angle):
 				radians = angle / 180.0 * math.pi
 		x1 = int(width / 2)
 		y1 = height
-		x2 = int(x1 - height / 2 / math.tan(radians))
+		x1 = 0
 		y2 = int(height / 2)
 		if radians == 0:
 			x2 = 0
@@ -97,6 +97,8 @@ def heading(frame, angle):
 		elif radians == math.pi:
 			x2 = width
 			y2 = height
+		else:
+			x2 = int(x1 - height / 2 / math.tan(radians))
 
 		cv2.line(heading_image, (x1, y1), (x2, y2), (0, 0, 255), 10)
 		heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
@@ -117,13 +119,14 @@ def clamp(n, bounds):
 				return n
 
 cap = cv2.VideoCapture(VIDEO_SOURCE)
+#cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, -4)
 input("Press Enter to start analysing frames")
 
 previousYellowAngle = None
 previousBlueAngle = None
 blueLeft = True
 angle = 90
-cutoff = 1/2
+cutoff = 2/3
 fracOffset = 1/16
 
 
