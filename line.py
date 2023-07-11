@@ -16,10 +16,16 @@ SHOW_IMAGES = False
 WRITE_IMAGES = False
 BASE_SPEED = 32
 BOOST_SPEED = 95
-BOOST_ANGLE = 5
+XBOOST_ANGLE = 5
+VBOOST_ANGLE = 15
+VBOOST_MODIFIER = 2 # higher value results in less speed when vboosting
+
+START_BOOST_DURATION = 0.2
+END_BOOST_DURATION = 0.23
 
 BLUR_KERNEL = 5
 OBSTACLE_BLUR = 30
+
 # for testing only [0, 62, 0], [179, 255, 124]
 # LOW_BLUE = [101, 106, 130]
 # HIGH_BLUE = [179, 255, 255]
@@ -249,7 +255,7 @@ yellowAngle = None
 
 input("PRESS ENTER TO START!")
 
-boost(BOOST_SPEED, 0.2)
+boost(BOOST_SPEED, START_BOOST_DURATION)
 
 startTime = time.time()
 
@@ -357,23 +363,18 @@ try:
 						finish = max(finishContours, key=cv2.contourArea)
 						if cv2.contourArea(finish) > GREEN_THRESHOLD:
 							print("ZOOMING TO FINISH LINE!")
-							move(99, 99)
-							time.sleep(0.2)
+							move(100, 100)
+							time.sleep(END_BOOST_DURATION)
 							brake()
 
 							endTime = time.time()
-							print(
-							f'\nSTART TIME: {startTime}\nEND TIME: {endTime}\nTOTAL TIME: {round(endTime - startTime)}s'
-							)
+							print(f'\nSTART TIME: {startTime}\nEND TIME: {endTime}\nTOTAL TIME: {round(endTime - startTime)}s')
 
 							input("PRESS ENTER TO CONTINUE TO NEXT LAP!")
-
 							startTime = time.time()
-
-							boost(BOOST_SPEED, 0.2)
+							boost(BOOST_SPEED, START_BOOST_DURATION)
 
 							continue
-			
 
 					if len(obstacleContours) > 0:
 						obstacle = max(obstacleContours, key=cv2.contourArea)
@@ -454,7 +455,13 @@ try:
 
 					print(f"Steering angle: {angle} degrees")
 
-					left, right = pwm(BASE_SPEED if abs(angle - 90) > BOOST_ANGLE else BOOST_SPEED, angle - 90)
+					targetSpeed = BASE_SPEED
+					if abs(angle - 90) < XBOOST_ANGLE:
+						targetSpeed = BOOST_SPEED
+					else:
+						targetSpeed = BOOST_SPEED - abs(angle - 90) * VBOOST_MODIFIER
+
+					left, right = pwm(targetSpeed, angle - 90)
 
 					'''# U-turn code
 					blueEdges = cv2.Canny(blueMask, cannyMin, cannyMax)
@@ -487,9 +494,9 @@ try:
 								right = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
 								print("Yellow U-turn detected")'''
 
-					print(f"Left: {left}, Right: {right}")
+					print(f"Left: {round(left)}, Right: {round(right)}")
 					move(left, right) if DRIVER_INITIALIZED else 0
-					#time.sleep(0.005)
+					#time.sleep(0.005) # 'optimizations' lol
 
 			try:
 					if cv2.waitKey(1) & 0xff == ord('q'):
