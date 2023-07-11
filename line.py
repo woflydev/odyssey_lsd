@@ -15,7 +15,7 @@ VIDEO_SOURCE = 0
 SHOW_IMAGES = False
 WRITE_IMAGES = True
 BASE_SPEED = 40
-BOOST_SPEED = 80
+BOOST_SPEED = 60
 BOOST_ANGLE = 5
 
 BLUR_KERNEL = 5
@@ -48,8 +48,8 @@ HIGH_BLUE = [137, 255, 255]
 LOW_YELLOW = [20, 127, 127] # qut track
 HIGH_YELLOW = [36, 255, 255]
 
-LOW_PURPLE = [117, 139, 27]
-HIGH_PURPLE = [156, 255, 134]
+LOW_PURPLE = [117, 100, 0]
+HIGH_PURPLE = [174, 255, 205]
 
 def pwm(speed, theta):
 	try:
@@ -225,7 +225,8 @@ uTurnBackSpeed = -0.25
 otherNone = False
 overrideArea = 20
 
-obstacleThreshold = 200
+obstacleThreshold = 8000
+obstacleWeight = 0.1
 
 finalAngleOffset = 0
 
@@ -283,24 +284,32 @@ try:
 					# Used simple here to save memory
 					obstacleContours, hierarchy = cv2.findContours(obstacleMask, 1, cv2.CHAIN_APPROX_SIMPLE)
 
-					leftEndPoint = (frame.shape[1] * fracOffset, frame.shape[0])
-					rightEndPoint = ((1 - fracOffset) * frame.shape[1], frame.shape[0])
+					leftEndPoint = (round(frame.shape[1] * fracOffset), frame.shape[0])
+					rightEndPoint = (round((1 - fracOffset) * frame.shape[1]), frame.shape[0])
 
 					previousBlueAngle = blueAngle
 					previousYellowAngle = yellowAngle
+
+					blueCentre = [0, 0]
+					yellowCentre = [0, 0]
+					obstacleCentre = [0, 0]
+
+					blueEndPoint = [0, 0]
+					yellowEndPoint = [0, 0]
+					obstacleEndPoint = [0, 0]
 
 					if len(blueContours) > 0:
 							c_b = max(blueContours, key=cv2.contourArea)
 							#print(c_b.shape)
 							M = cv2.moments(c_b)
 							if M["m00"] != 0:
-									cx = int(M['m10']/M['m00'])
-									cy = int(M['m01']/M['m00'])
-									endPoint = leftEndPoint if blueLeft else rightEndPoint
-									blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
+									blueCentre[0] = int(M['m10']/M['m00'])
+									blueCentre[1] = int(M['m01']/M['m00'])
+									blueEndPoint = leftEndPoint if blueLeft else rightEndPoint
+									blueAngle = 180 - round(np.arctan2(blueEndPoint[1] - blueCentre[1], blueCentre[0] - blueEndPoint[0]) * 180 / np.pi)
 									cv2.drawContours(contourFrame, [c_b], 0, contourColor, lineThickness)
-									cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)
-									cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), lineColor, lineThickness)     
+									cv2.circle(contourFrame, (blueCentre[0],blueCentre[1]), circleRadius, circleColor, -1)
+									cv2.line(contourFrame, (blueCentre[0], blueCentre[1]), (round(blueEndPoint[0]), blueEndPoint[1]), lineColor, lineThickness)     
 									#print(f"Blue steering angle: {blueAngle} degrees")
 					else:
 							blueAngle = None
@@ -309,65 +318,80 @@ try:
 							c_y = max(yellowContours, key=cv2.contourArea)
 							M = cv2.moments(c_y)
 							if M["m00"] != 0:
-									cx = int(M['m10']/M['m00'])
-									cy = int(M['m01']/M['m00']) 
-									endPoint = rightEndPoint if blueLeft else leftEndPoint
-									yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi) 
+									yellowCentre[0] = int(M['m10']/M['m00'])
+									yellowCentre[1] = int(M['m01']/M['m00']) 
+									yellowEndPoint = rightEndPoint if blueLeft else leftEndPoint
+									yellowAngle = 180 - round(np.arctan2(yellowEndPoint[1] - yellowCentre[1], yellowCentre[0] - yellowEndPoint[0]) * 180 / np.pi) 
 									cv2.drawContours(contourFrame, [c_y], 0, contourColor, lineThickness)
-									cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)
-									cv2.line(contourFrame, (cx, cy), (round(endPoint[0]), endPoint[1]), lineColor, lineThickness)         
+									cv2.circle(contourFrame, (yellowCentre[0],yellowCentre[1]), circleRadius, circleColor, -1)
+									cv2.line(contourFrame, (yellowCentre[0], yellowCentre[1]), (round(yellowEndPoint[0]), yellowEndPoint[1]), lineColor, lineThickness)         
 									#print(f"Yellow steering angle: {yellowAngle} degrees")
 					else:
 						yellowAngle = None
 
+					obstacleDetected = False
+					obstacleLeft = False
+
 					if len(obstacleContours) > 0:
 						obstacle = max(obstacleContours, key=cv2.contourArea)
 						if (cv2.contourArea(obstacle) > obstacleThreshold):
+							obstacleDetected = True
 							M = cv2.moments(obstacle)
 							if M["m00"] != 0:
-								cx = int(M['m10']/M['m00'])
-								cy = int(M['m01']/M['m00'])
+								obstacleCentre[0] = int(M['m10']/M['m00'])
+								obstacleCentre[1] = int(M['m01']/M['m00'])
+								sideLengthHalved = round(math.sqrt(cv2.contourArea(obstacle)) /2)
 								cv2.drawContours(contourFrame, [obstacle], 0, obstacleColor, lineThickness)
-								cv2.circle(contourFrame, (cx,cy), circleRadius, circleColor, -1)
-								if cx > frame.shape[1] / 2:
-									endPoint = rightEndPoint
-									if blueLeft:
-										blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
-									else:
-										yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
-								else:
-									endPoint = leftEndPoint
-									if blueLeft:
-										yellowAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
-									else:
-										blueAngle = 180 - round(np.arctan2(endPoint[1] - cy, cx - endPoint[0]) * 180 / np.pi)
-					
-					print(f"Blue angle: {blueAngle}, Yellow angle: {yellowAngle}")
 
-					if blueAngle is None and yellowAngle is not None:
-							if previousYellowAngle is not None:
-									angle = stabilize(yellowAngle, previousYellowAngle, 1)
-									print("stabilizing yellow.")
-							else:
-									angle = yellowAngle
-									print("not stabilizing yellow!")
-					elif yellowAngle is None and blueAngle is not None:
-							if previousBlueAngle is not None:
-									angle = stabilize(blueAngle, previousBlueAngle, 1)
-									print("stabilizing blue.")
-							else:
-									angle = blueAngle
-									print("not stabilizing blue!")
-					elif blueAngle is not None and yellowAngle is not None:
-							if previousBlueAngle is not None and previousYellowAngle is not None:
-									angle = stabilize(avg([blueAngle, yellowAngle]), avg([previousBlueAngle, previousYellowAngle]), 2)
-									print("stabilizing both!")
-							else:
-									angle = (blueAngle + yellowAngle) / 2
-									print("not stabilizing anything.")
+								if obstacleCentre[0] > frame.shape[1] / 2:
+										obstacleEndPoint = rightEndPoint
+										if blueLeft:
+											blueAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] - sideLengthHalved) * 180 / np.pi)
+										else:
+											yellowAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] - sideLengthHalved) * 180 / np.pi)
+										obstacleCentre[0] -= sideLengthHalved
+								else:
+									obstacleLeft = True
+									obstacleEndPoint = leftEndPoint
+									if blueLeft:
+										yellowAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] + sideLengthHalved) * 180 / np.pi)
+									else:
+										blueAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] + sideLengthHalved) * 180 / np.pi)
+									obstacleCentre[0] += sideLengthHalved
+								cv2.circle(contourFrame, (obstacleCentre[0],obstacleCentre[1]), circleRadius, circleColor, -1)
+								cv2.line(contourFrame, (obstacleCentre[0], obstacleCentre[1]), (obstacleEndPoint[0], obstacleEndPoint[1]), lineColor, lineThickness)
+
+					print(f"Blue angle: {blueAngle}, Yellow angle: {yellowAngle}")
+					if obstacleDetected and blueAngle is not None and yellowAngle is not None:
+						if obstacleLeft:
+							angle = weighted_avg([blueAngle, yellowAngle], [(1 - obstacleWeight) if blueLeft else obstacleWeight, obstacleWeight if blueLeft else (1 - obstacleWeight)])
+						else:
+							angle = weighted_avg([blueAngle, yellowAngle], [obstacleWeight if blueLeft else (1 - obstacleWeight), (1 - obstacleWeight) if blueLeft else obstacleWeight])
 					else:
-							print("give up lol")
-							angle = 90
+						if blueAngle is None and yellowAngle is not None:
+								if previousYellowAngle is not None:
+										angle = stabilize(yellowAngle, previousYellowAngle, 1)
+										print("stabilizing yellow.")
+								else:
+										angle = yellowAngle
+										print("not stabilizing yellow!")
+						elif yellowAngle is None and blueAngle is not None:
+								if previousBlueAngle is not None:
+										angle = stabilize(blueAngle, previousBlueAngle, 1)
+										print("stabilizing blue.")
+								else:
+										angle = blueAngle
+										print("not stabilizing blue!")
+						elif blueAngle is not None and yellowAngle is not None:
+								if previousBlueAngle is not None and previousYellowAngle is not None:
+										angle = stabilize(avg([blueAngle, yellowAngle]), avg([previousBlueAngle, previousYellowAngle]), 2)
+										print("stabilizing both!")
+								else:
+										angle = avg([blueAngle, yellowAngle])
+										print("not stabilizing anything.")
+						else:
+								print("give up lol")
+								angle = 90
 					#print(f"Previous angles: {previousBlueAngle}, {previousYellowAngle}")
 					# Adds obstacle avoidance
 					#angle += finalAngleOffset
@@ -430,7 +454,8 @@ try:
 			except:
 					off()
 					pass
-except:
+except Exception as e:
+	print(str(e)) 
 	print("ignore this if it's not something with the code!")
 	off()
 	pass
