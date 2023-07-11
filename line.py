@@ -208,7 +208,6 @@ def length_of_line_segment(line):
 	return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 cap = cv2.VideoCapture(VIDEO_SOURCE)
-input("PRESS ENTER TO START!")
 
 previousYellowAngle = None
 previousBlueAngle = None
@@ -244,6 +243,11 @@ lineThickness = 3
 blueAngle = None
 yellowAngle = None
 
+input("PRESS ENTER TO START!")
+
+startTime = time.time()
+
+# begin main program
 try:
 	while True:
 			error = 0
@@ -350,7 +354,22 @@ try:
 							move(99, 99)
 							time.sleep(0.1)
 							brake()
+
+							endTime = time.time()
+							print(
+							f'''start time                  end time                  lap time 
+										|                            |                          | 
+										|                            |                          | 
+								+----+--------------+     +----+-------------+       +----+-----------+ 
+								| 1  | {startTime}s |     | 2  | {endTime}s  |       |  3 | {endTime - startTime}s | 
+								+----+--------------+     +----+-------------+       +----+-----------+ 
+								'''
+								)
+
 							input("PRESS ENTER TO CONTINUE TO NEXT LAP!")
+
+							startTime = time.time()
+
 							continue
 			
 
