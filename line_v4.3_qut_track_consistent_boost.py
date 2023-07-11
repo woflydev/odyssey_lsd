@@ -210,7 +210,7 @@ input("Press Enter to start analysing frames")
 
 previousYellowAngle = None
 previousBlueAngle = None
-blueLeft = True
+blueLeft = False
 angle = 90
 cutoffConstant = 2/3
 
