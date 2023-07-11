@@ -14,8 +14,8 @@ VIDEO_SOURCE = 0
 
 SHOW_IMAGES = False
 WRITE_IMAGES = True
-BASE_SPEED = 35
-BOOST_SPEED = 90
+BASE_SPEED = 32
+BOOST_SPEED = 93
 BOOST_ANGLE = 5
 
 BLUR_KERNEL = 5
@@ -207,6 +207,10 @@ def length_of_line_segment(line):
 	x1, y1, x2, y2 = line
 	return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
+def boost(speed, t):
+	move(speed, speed)
+	time.sleep(t)
+
 cap = cv2.VideoCapture(VIDEO_SOURCE)
 
 previousYellowAngle = None
@@ -244,6 +248,8 @@ blueAngle = None
 yellowAngle = None
 
 input("PRESS ENTER TO START!")
+
+boost(BOOST_SPEED, 0.2)
 
 startTime = time.time()
 
@@ -357,18 +363,14 @@ try:
 
 							endTime = time.time()
 							print(
-							f'''start time                  end time                  lap time 
-										|                            |                          | 
-										|                            |                          | 
-								+----+--------------+     +----+-------------+       +----+-----------+ 
-								| 1  | {startTime}s |     | 2  | {endTime}s  |       |  3 | {endTime - startTime}s | 
-								+----+--------------+     +----+-------------+       +----+-----------+ 
-								'''
-								)
+							f'\nSTART TIME: {startTime}\nEND TIME: {endTime}\nTOTAL TIME: {round(endTime - startTime)}s'
+							)
 
 							input("PRESS ENTER TO CONTINUE TO NEXT LAP!")
 
 							startTime = time.time()
+
+							boost(BOOST_SPEED, 0.2)
 
 							continue
 			
@@ -501,7 +503,7 @@ except:
 	off()
 	pass
 
-brake()
+off()
 cap.release()
 cv2.destroyAllWindows()
 exit(0)
