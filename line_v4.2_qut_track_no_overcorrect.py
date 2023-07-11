@@ -211,8 +211,6 @@ previousBlueAngle = None
 blueLeft = False
 angle = 90
 cutoffConstant = 2/3
-cutoffMin = 1/3
-cutoffMax = 1
 
 # 1/16 good for 40 BASE_SPEED
 fracOffset = 1/16
@@ -278,7 +276,7 @@ try:
 					bottomLeft = np.zeros_like(blueMask)
 					bottomRight = np.zeros_like(yellowMask)
 
-					cutoff = clamp(cutoffConstant * BASE_SPEED / 30, (cutoffMin, cutoffMax))
+					cutoff = clamp(cutoffConstant * BASE_SPEED / 30, (1/3, 5/6))
 
 					bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff), round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
 					bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff)), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)

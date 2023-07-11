@@ -3,6 +3,8 @@ import numpy as np
 import time
 import math
 
+# boost 80 consistent
+
 DRIVER_INITIALIZED = False
 try:
 	from utils.motor_lib.driver import move, off
@@ -15,7 +17,7 @@ VIDEO_SOURCE = 0
 SHOW_IMAGES = False
 WRITE_IMAGES = True
 BASE_SPEED = 40
-BOOST_SPEED = 60
+BOOST_SPEED = 80
 BOOST_ANGLE = 5
 
 BLUR_KERNEL = 10
@@ -208,11 +210,9 @@ input("Press Enter to start analysing frames")
 
 previousYellowAngle = None
 previousBlueAngle = None
-blueLeft = False
+blueLeft = True
 angle = 90
 cutoffConstant = 2/3
-cutoffMin = 1/3
-cutoffMax = 1
 
 # 1/16 good for 40 BASE_SPEED
 fracOffset = 1/16
@@ -278,7 +278,7 @@ try:
 					bottomLeft = np.zeros_like(blueMask)
 					bottomRight = np.zeros_like(yellowMask)
 
-					cutoff = clamp(cutoffConstant * BASE_SPEED / 30, (cutoffMin, cutoffMax))
+					cutoff = clamp(cutoffConstant * BASE_SPEED / 30, (1/3, 5/6))
 
 					bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff), round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
 					bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff)), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
