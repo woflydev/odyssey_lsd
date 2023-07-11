@@ -15,7 +15,7 @@ VIDEO_SOURCE = 0
 SHOW_IMAGES = False
 WRITE_IMAGES = False
 BASE_SPEED = 32
-BOOST_SPEED = 95
+BOOST_SPEED = 93
 BOOST_ANGLE = 5
 
 BLUR_KERNEL = 5
@@ -232,8 +232,8 @@ uTurnBackSpeed = -0.25
 otherNone = False
 overrideArea = 20
 
-obstacleThreshold = 6000
-obstacleWeight = 0.25
+obstacleThreshold = 8000
+obstacleWeight = 0.2
 
 finalAngleOffset = 0
 
@@ -358,7 +358,7 @@ try:
 						if cv2.contourArea(finish) > GREEN_THRESHOLD:
 							print("ZOOMING TO FINISH LINE!")
 							move(99, 99)
-							time.sleep(0.2)
+							time.sleep(0.1)
 							brake()
 
 							endTime = time.time()
