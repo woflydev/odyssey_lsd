@@ -208,7 +208,7 @@ def length_of_line_segment(line):
 	return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 cap = cv2.VideoCapture(VIDEO_SOURCE)
-input("Press Enter to start analysing frames")
+input("PRESS ENTER TO START!")
 
 previousYellowAngle = None
 previousBlueAngle = None
@@ -350,7 +350,8 @@ try:
 							move(99, 99)
 							time.sleep(0.1)
 							brake()
-							break
+							input("PRESS ENTER TO CONTINUE TO NEXT LAP!")
+							continue
 			
 
 					if len(obstacleContours) > 0:
