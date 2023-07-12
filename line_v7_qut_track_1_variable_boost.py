@@ -239,7 +239,7 @@ otherNone = False
 overrideArea = 20
 
 obstacleThreshold = 6000
-obstacleWeight = 0.25
+obstacleWeight = 0.05
 
 finalAngleOffset = 0
 

@@ -238,8 +238,8 @@ uTurnBackSpeed = -0.25
 otherNone = False
 overrideArea = 20
 
-obstacleThreshold = 6000
-obstacleWeight = 0.25
+obstacleThreshold = 7000
+obstacleWeight = 0.05
 
 finalAngleOffset = 0
 
