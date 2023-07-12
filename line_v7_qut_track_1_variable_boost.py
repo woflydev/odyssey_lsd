@@ -18,7 +18,7 @@ BASE_SPEED = 40
 BOOST_SPEED = 95
 XBOOST_ANGLE = 5
 VBOOST_ANGLE = 15
-VBOOST_MODIFIER = 4 # higher value results in less speed when vboosting
+VBOOST_MODIFIER = 3.5 # higher value results in less speed when vboosting
 
 START_BOOST_DURATION = 0.2
 END_BOOST_DURATION = 0.23

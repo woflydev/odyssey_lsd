@@ -14,11 +14,11 @@ VIDEO_SOURCE = 0
 
 SHOW_IMAGES = False
 WRITE_IMAGES = False
-BASE_SPEED = 35
-BOOST_SPEED = 95
+BASE_SPEED = 38
+BOOST_SPEED = 100
 XBOOST_ANGLE = 5
 VBOOST_ANGLE = 15
-VBOOST_MODIFIER = 4.5 # higher value results in less speed when vboosting
+VBOOST_MODIFIER = 3 # higher value results in less speed when vboosting
 
 START_BOOST_DURATION = 0.2
 END_BOOST_DURATION = 0.23
