@@ -14,11 +14,11 @@ VIDEO_SOURCE = 0
 
 SHOW_IMAGES = False
 WRITE_IMAGES = False
-BASE_SPEED = 32
+BASE_SPEED = 35
 BOOST_SPEED = 95
 XBOOST_ANGLE = 5
 VBOOST_ANGLE = 15
-VBOOST_MODIFIER = 2 # higher value results in less speed when vboosting
+VBOOST_MODIFIER = 4.5 # higher value results in less speed when vboosting
 
 START_BOOST_DURATION = 0.2
 END_BOOST_DURATION = 0.23
@@ -60,6 +60,16 @@ HIGH_PURPLE = [174, 255, 205]
 LOW_GREEN = [38, 163, 182]
 HIGH_GREEN = [43, 255, 255]
 GREEN_THRESHOLD = 2000
+
+LOW_BLACK = [0, 0, 10]
+HIGH_BLACK = [179, 106, 71]
+SIGN_CUTOFF = 1/2
+BLACK_THRESHOLD = 1000
+
+
+# The angle that it turns when it sees the sign
+SPLIT_ANGLE = 0
+turnLeft = True
 
 def pwm(speed, theta):
 	try:
@@ -238,8 +248,8 @@ uTurnBackSpeed = -0.25
 otherNone = False
 overrideArea = 20
 
-obstacleThreshold = 6000
-obstacleWeight = 0.25
+obstacleThreshold = 7500
+obstacleWeight = 0.35
 
 finalAngleOffset = 0
 
@@ -260,255 +270,269 @@ boost(BOOST_SPEED, START_BOOST_DURATION)
 startTime = time.time()
 
 # begin main program
-try:
-	while True:
-			error = 0
-			ret, frame = cap.read()
+#try:
+while True:
+		error = 0
+		ret, frame = cap.read()
 
-			if ret:
-					originalFrame = np.copy(frame)
-					frame = cv2.blur(originalFrame, (BLUR_KERNEL, BLUR_KERNEL))
-					contourFrame = np.copy(frame)
-					obstacleFrame = cv2.blur(originalFrame, (OBSTACLE_BLUR, OBSTACLE_BLUR))
+		if ret:
+				originalFrame = np.copy(frame)
+				frame = cv2.blur(originalFrame, (BLUR_KERNEL, BLUR_KERNEL))
+				contourFrame = np.copy(frame)
+				obstacleFrame = cv2.blur(originalFrame, (OBSTACLE_BLUR, OBSTACLE_BLUR))
 
-					low_b = np.uint8(LOW_BLUE)
-					high_b = np.uint8(HIGH_BLUE)
+				low_b = np.uint8(LOW_BLUE)
+				high_b = np.uint8(HIGH_BLUE)
 
-					low_y = np.uint8(LOW_YELLOW)
-					high_y = np.uint8(HIGH_YELLOW)
+				low_y = np.uint8(LOW_YELLOW)
+				high_y = np.uint8(HIGH_YELLOW)
 
-					low_p = np.uint8(LOW_PURPLE)
-					high_p = np.uint8(HIGH_PURPLE)
+				low_p = np.uint8(LOW_PURPLE)
+				high_p = np.uint8(HIGH_PURPLE)
 
-					low_g = np.uint8(LOW_GREEN)
-					high_g = np.uint8(HIGH_GREEN)
+				low_g = np.uint8(LOW_GREEN)
+				high_g = np.uint8(HIGH_GREEN)
 
-					hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-					obstacleHSV = cv2.cvtColor(obstacleFrame, cv2.COLOR_BGR2HSV)
+				low_b = np.uint8(LOW_BLACK)
+				high_b = np.uint8(HIGH_BLACK)
 
-					blueMask = cv2.inRange(hsv, low_b, high_b)
-					yellowMask = cv2.inRange(hsv, low_y, high_y)
-					obstacleMask = cv2.inRange(obstacleHSV, low_p, high_p)
-					greenMask = cv2.inRange(hsv, low_g, high_g)
+				hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+				obstacleHSV = cv2.cvtColor(obstacleFrame, cv2.COLOR_BGR2HSV)
 
-					# Only focuses on the bottom half or section of the screen as determined by cutoff
-					bottomLeft = np.zeros_like(blueMask)
-					bottomRight = np.zeros_like(yellowMask)
+				blueMask = cv2.inRange(hsv, low_b, high_b)
+				yellowMask = cv2.inRange(hsv, low_y, high_y)
+				obstacleMask = cv2.inRange(obstacleHSV, low_p, high_p)
+				greenMask = cv2.inRange(hsv, low_g, high_g)
+				signMask = cv2.inRange(hsv, low_b, high_b)
 
-					cutoff = clamp(cutoffConstant * BASE_SPEED / 30, (cutoffMin, cutoffMax))
+				# Only focuses on the bottom half or section of the screen as determined by cutoff
+				bottomLeft = np.zeros_like(blueMask)
+				bottomRight = np.zeros_like(yellowMask)
+				bottomRectangle = np.zeros_like(signMask)
 
-					bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff), round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
-					bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff)), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
+				cutoff = clamp(cutoffConstant * BASE_SPEED / 30, (cutoffMin, cutoffMax))
 
-					blueMask = cv2.bitwise_and(blueMask, blueMask, mask=bottomLeft if blueLeft else bottomRight)
-					yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=bottomRight if blueLeft else bottomLeft)
-	
+				bottomLeft = cv2.rectangle(bottomLeft, (0, bottomLeft.shape[0]), (round(bottomLeft.shape[1] * cutoff), round(bottomLeft.shape[0] * (1 - cutoff))), 255, -1)
+				bottomRight = cv2.rectangle(bottomRight, (bottomRight.shape[1], bottomRight.shape[0]), (round(bottomRight.shape[1] * (1 - cutoff)), round(bottomRight.shape[0] * (1 - cutoff))), 255, -1)
+				
+				#bottomRectangle = cv2.rectangle(bottomRectangle, (0, bottomRectangle.shape[0]), (bottomRectangle.shape[1], round((1 - SIGN_CUTOFF) * bottomRectangle.shape[0])), 255, -1)
 
-					blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) 
-					yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE)
-					# Used simple here to save memory
-					obstacleContours, hierarchy = cv2.findContours(obstacleMask, 1, cv2.CHAIN_APPROX_SIMPLE)
+				blueMask = cv2.bitwise_and(blueMask, blueMask, mask=bottomLeft if blueLeft else bottomRight)
+				yellowMask = cv2.bitwise_and(yellowMask, yellowMask, mask=bottomRight if blueLeft else bottomLeft)
+				#signMask = cv2.bitwise_and(signMask, signMask, mask=bottomRectangle)
 
-					finishContours, hierarchy = cv2.findContours(greenMask, 1, cv2.CHAIN_APPROX_NONE)
+				blueContours, hierarchy = cv2.findContours(blueMask, 1, cv2.CHAIN_APPROX_NONE) 
+				yellowContours, hierarchy = cv2.findContours(yellowMask, 1, cv2.CHAIN_APPROX_NONE)
+				# Used simple here to save memory
+				obstacleContours, hierarchy = cv2.findContours(obstacleMask, 1, cv2.CHAIN_APPROX_SIMPLE)
 
-					leftEndPoint = (round(frame.shape[1] * fracOffset), frame.shape[0])
-					rightEndPoint = (round((1 - fracOffset) * frame.shape[1]), frame.shape[0])
+				finishContours, hierarchy = cv2.findContours(greenMask, 1, cv2.CHAIN_APPROX_NONE)
+				#signContours, hierarchy = cv2.findContours(signMask, 1, cv2.CHAIN_APPROX_NONE)
 
-					previousBlueAngle = blueAngle
-					previousYellowAngle = yellowAngle
+				leftEndPoint = (round(frame.shape[1] * fracOffset), frame.shape[0])
+				rightEndPoint = (round((1 - fracOffset) * frame.shape[1]), frame.shape[0])
 
-					blueCentre = [0, 0]
-					yellowCentre = [0, 0]
-					obstacleCentre = [0, 0]
+				previousBlueAngle = blueAngle
+				previousYellowAngle = yellowAngle
 
-					blueEndPoint = [0, 0]
-					yellowEndPoint = [0, 0]
-					obstacleEndPoint = [0, 0]
+				blueCentre = [0, 0]
+				yellowCentre = [0, 0]
+				obstacleCentre = [0, 0]
 
-					if len(blueContours) > 0:
-							c_b = max(blueContours, key=cv2.contourArea)
-							#print(c_b.shape)
-							M = cv2.moments(c_b)
-							if M["m00"] != 0:
-									blueCentre[0] = int(M['m10']/M['m00'])
-									blueCentre[1] = int(M['m01']/M['m00'])
-									blueEndPoint = leftEndPoint if blueLeft else rightEndPoint
-									blueAngle = 180 - round(np.arctan2(blueEndPoint[1] - blueCentre[1], blueCentre[0] - blueEndPoint[0]) * 180 / np.pi)
-									cv2.drawContours(contourFrame, [c_b], 0, contourColor, lineThickness)
-									cv2.circle(contourFrame, (blueCentre[0],blueCentre[1]), circleRadius, circleColor, -1)
-									cv2.line(contourFrame, (blueCentre[0], blueCentre[1]), (round(blueEndPoint[0]), blueEndPoint[1]), lineColor, lineThickness)     
-									#print(f"Blue steering angle: {blueAngle} degrees")
-					else:
-							blueAngle = None
+				blueEndPoint = [0, 0]
+				yellowEndPoint = [0, 0]
+				obstacleEndPoint = [0, 0]
 
-					if len(yellowContours) > 0:
-							c_y = max(yellowContours, key=cv2.contourArea)
-							M = cv2.moments(c_y)
-							if M["m00"] != 0:
-									yellowCentre[0] = int(M['m10']/M['m00'])
-									yellowCentre[1] = int(M['m01']/M['m00']) 
-									yellowEndPoint = rightEndPoint if blueLeft else leftEndPoint
-									yellowAngle = 180 - round(np.arctan2(yellowEndPoint[1] - yellowCentre[1], yellowCentre[0] - yellowEndPoint[0]) * 180 / np.pi) 
-									cv2.drawContours(contourFrame, [c_y], 0, contourColor, lineThickness)
-									cv2.circle(contourFrame, (yellowCentre[0],yellowCentre[1]), circleRadius, circleColor, -1)
-									cv2.line(contourFrame, (yellowCentre[0], yellowCentre[1]), (round(yellowEndPoint[0]), yellowEndPoint[1]), lineColor, lineThickness)         
-									#print(f"Yellow steering angle: {yellowAngle} degrees")
-					else:
-						yellowAngle = None
+				if len(blueContours) > 0:
+						c_b = max(blueContours, key=cv2.contourArea)
+						#print(c_b.shape)
+						M = cv2.moments(c_b)
+						if M["m00"] != 0:
+								blueCentre[0] = int(M['m10']/M['m00'])
+								blueCentre[1] = int(M['m01']/M['m00'])
+								blueEndPoint = leftEndPoint if blueLeft else rightEndPoint
+								blueAngle = 180 - round(np.arctan2(blueEndPoint[1] - blueCentre[1], blueCentre[0] - blueEndPoint[0]) * 180 / np.pi)
+								cv2.drawContours(contourFrame, [c_b], 0, contourColor, lineThickness)
+								cv2.circle(contourFrame, (blueCentre[0],blueCentre[1]), circleRadius, circleColor, -1)
+								cv2.line(contourFrame, (blueCentre[0], blueCentre[1]), (round(blueEndPoint[0]), blueEndPoint[1]), lineColor, lineThickness)     
+								#print(f"Blue steering angle: {blueAngle} degrees")
+				else:
+						blueAngle = None
 
-					obstacleDetected = False
-					obstacleLeft = False
+				if len(yellowContours) > 0:
+						c_y = max(yellowContours, key=cv2.contourArea)
+						M = cv2.moments(c_y)
+						if M["m00"] != 0:
+								yellowCentre[0] = int(M['m10']/M['m00'])
+								yellowCentre[1] = int(M['m01']/M['m00']) 
+								yellowEndPoint = rightEndPoint if blueLeft else leftEndPoint
+								yellowAngle = 180 - round(np.arctan2(yellowEndPoint[1] - yellowCentre[1], yellowCentre[0] - yellowEndPoint[0]) * 180 / np.pi) 
+								cv2.drawContours(contourFrame, [c_y], 0, contourColor, lineThickness)
+								cv2.circle(contourFrame, (yellowCentre[0],yellowCentre[1]), circleRadius, circleColor, -1)
+								cv2.line(contourFrame, (yellowCentre[0], yellowCentre[1]), (round(yellowEndPoint[0]), yellowEndPoint[1]), lineColor, lineThickness)         
+								#print(f"Yellow steering angle: {yellowAngle} degrees")
+				else:
+					yellowAngle = None
 
-					if len(finishContours) > 0:
-						finish = max(finishContours, key=cv2.contourArea)
-						if cv2.contourArea(finish) > GREEN_THRESHOLD:
-							print("ZOOMING TO FINISH LINE!")
-							move(100, 100)
-							time.sleep(END_BOOST_DURATION)
-							brake()
+				obstacleDetected = False
+				obstacleLeft = False
 
-							endTime = time.time()
-							print(f'\nSTART TIME: {startTime}\nEND TIME: {endTime}\nTOTAL TIME: {round(endTime - startTime)}s')
+				if len(finishContours) > 0:
+					finish = max(finishContours, key=cv2.contourArea)
+					if cv2.contourArea(finish) > GREEN_THRESHOLD:
+						print("ZOOMING TO FINISH LINE!")
+						move(100, 100)
+						time.sleep(END_BOOST_DURATION)
+						brake()
 
-							input("PRESS ENTER TO CONTINUE TO NEXT LAP!")
-							startTime = time.time()
-							boost(BOOST_SPEED, START_BOOST_DURATION)
+						endTime = time.time()
+						print(f'\nSTART TIME: {startTime}\nEND TIME: {endTime}\nTOTAL TIME: {round(endTime - startTime)}s')
 
-							continue
+						input("PRESS ENTER TO CONTINUE TO NEXT LAP!")
+						startTime = time.time()
+						boost(BOOST_SPEED, START_BOOST_DURATION)
 
-					if len(obstacleContours) > 0:
-						obstacle = max(obstacleContours, key=cv2.contourArea)
-						if (cv2.contourArea(obstacle) > obstacleThreshold):
-							obstacleDetected = True
-							M = cv2.moments(obstacle)
-							if M["m00"] != 0:
-								obstacleCentre[0] = int(M['m10']/M['m00'])
-								obstacleCentre[1] = int(M['m01']/M['m00'])
-								sideLengthHalved = round(math.sqrt(cv2.contourArea(obstacle)) /2)
-								cv2.drawContours(contourFrame, [obstacle], 0, obstacleColor, lineThickness)
+						continue
 
-								if obstacleCentre[0] > frame.shape[1] / 2:
-										obstacleEndPoint = rightEndPoint
-										if blueLeft:
-											blueAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] - sideLengthHalved) * 180 / np.pi)
-										else:
-											yellowAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] - sideLengthHalved) * 180 / np.pi)
-										obstacleCentre[0] -= sideLengthHalved
-								else:
-									obstacleLeft = True
-									obstacleEndPoint = leftEndPoint
+				if len(obstacleContours) > 0:
+					obstacle = max(obstacleContours, key=cv2.contourArea)
+					if (cv2.contourArea(obstacle) > obstacleThreshold):
+						obstacleDetected = True
+						M = cv2.moments(obstacle)
+						if M["m00"] != 0:
+							obstacleCentre[0] = int(M['m10']/M['m00'])
+							obstacleCentre[1] = int(M['m01']/M['m00'])
+							sideLengthHalved = round(math.sqrt(cv2.contourArea(obstacle)) /2)
+							cv2.drawContours(contourFrame, [obstacle], 0, obstacleColor, lineThickness)
+
+							if obstacleCentre[0] > frame.shape[1] / 2:
+									obstacleEndPoint = rightEndPoint
 									if blueLeft:
-										yellowAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] + sideLengthHalved) * 180 / np.pi)
+										blueAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] - sideLengthHalved) * 180 / np.pi)
 									else:
-										blueAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] + sideLengthHalved) * 180 / np.pi)
-									obstacleCentre[0] += sideLengthHalved
-								cv2.circle(contourFrame, (obstacleCentre[0],obstacleCentre[1]), circleRadius, circleColor, -1)
-								cv2.line(contourFrame, (obstacleCentre[0], obstacleCentre[1]), (obstacleEndPoint[0], obstacleEndPoint[1]), lineColor, lineThickness)
+										yellowAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] - sideLengthHalved) * 180 / np.pi)
+									obstacleCentre[0] -= sideLengthHalved
+							else:
+								obstacleLeft = True
+								obstacleEndPoint = leftEndPoint
+								if blueLeft:
+									yellowAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] + sideLengthHalved) * 180 / np.pi)
+								else:
+									blueAngle = 180 - round(np.arctan2(obstacleEndPoint[1] - obstacleCentre[1], obstacleCentre[0] - obstacleEndPoint[0] + sideLengthHalved) * 180 / np.pi)
+								obstacleCentre[0] += sideLengthHalved
+							cv2.circle(contourFrame, (obstacleCentre[0],obstacleCentre[1]), circleRadius, circleColor, -1)
+							cv2.line(contourFrame, (obstacleCentre[0], obstacleCentre[1]), (obstacleEndPoint[0], obstacleEndPoint[1]), lineColor, lineThickness)
 
-					print(f"Blue angle: {blueAngle}, Yellow angle: {yellowAngle}")
-					if obstacleDetected and blueAngle is not None and yellowAngle is not None:
-						if obstacleLeft:
-							angle = weighted_avg([blueAngle, yellowAngle], [(1 - obstacleWeight) if blueLeft else obstacleWeight, obstacleWeight if blueLeft else (1 - obstacleWeight)])
-						else:
-							angle = weighted_avg([blueAngle, yellowAngle], [obstacleWeight if blueLeft else (1 - obstacleWeight), (1 - obstacleWeight) if blueLeft else obstacleWeight])
+				"""if len(signContours) > 0:
+					sign = max(signContours, key=cv2.contourArea)
+					if (cv2.contourArea(sign) > BLACK_THRESHOLD):
+						angle += SPLIT_ANGLE * (-1 if turnLeft else 1)"""
+
+				print(f"Blue angle: {blueAngle}, Yellow angle: {yellowAngle}")
+				if obstacleDetected and blueAngle is not None and yellowAngle is not None:
+					if obstacleLeft:
+						angle = weighted_avg([blueAngle, yellowAngle], [(1 - obstacleWeight) if blueLeft else obstacleWeight, obstacleWeight if blueLeft else (1 - obstacleWeight)])
 					else:
-						if blueAngle is None and yellowAngle is not None:
-								if previousYellowAngle is not None:
-										angle = stabilize(yellowAngle, previousYellowAngle, 1)
-										print("stabilizing yellow.")
-								else:
-										angle = yellowAngle
-										print("not stabilizing yellow!")
-						elif yellowAngle is None and blueAngle is not None:
-								if previousBlueAngle is not None:
-										angle = stabilize(blueAngle, previousBlueAngle, 1)
-										print("stabilizing blue.")
-								else:
-										angle = blueAngle
-										print("not stabilizing blue!")
-						elif blueAngle is not None and yellowAngle is not None:
-								if previousBlueAngle is not None and previousYellowAngle is not None:
-										angle = stabilize(avg([blueAngle, yellowAngle]), avg([previousBlueAngle, previousYellowAngle]), 2)
-										print("stabilizing both!")
-								else:
-										angle = avg([blueAngle, yellowAngle])
-										print("not stabilizing anything.")
-						else:
-								print("give up lol")
-								angle = 90
-					#print(f"Previous angles: {previousBlueAngle}, {previousYellowAngle}")
-					# Adds obstacle avoidance
-					#angle += finalAngleOffset
-
-					#angleLimit = 20
-					#angle = clamp(angle, [angleLimit, 180 - angleLimit])
-					
-					heading_img = heading(contourFrame, angle)
-
-					show("Blue Mask", blueMask)
-					show("Yellow Mask", yellowMask)
-					show("Obstacle Mask", obstacleMask)
-					show("Finish Mask", greenMask)
-					show("Frame", frame)
-					show("Contours", contourFrame)
-					show("Heading", heading_img, True)
-
-					print(f"Steering angle: {angle} degrees")
-
-					targetSpeed = BASE_SPEED
-					if abs(angle - 90) < XBOOST_ANGLE:
-						targetSpeed = BOOST_SPEED
+						angle = weighted_avg([blueAngle, yellowAngle], [obstacleWeight if blueLeft else (1 - obstacleWeight), (1 - obstacleWeight) if blueLeft else obstacleWeight])
+				else:
+					if blueAngle is None and yellowAngle is not None:
+							if previousYellowAngle is not None:
+									angle = stabilize(yellowAngle, previousYellowAngle, 1)
+									print("stabilizing yellow.")
+							else:
+									angle = yellowAngle
+									print("not stabilizing yellow!")
+					elif yellowAngle is None and blueAngle is not None:
+							if previousBlueAngle is not None:
+									angle = stabilize(blueAngle, previousBlueAngle, 1)
+									print("stabilizing blue.")
+							else:
+									angle = blueAngle
+									print("not stabilizing blue!")
+					elif blueAngle is not None and yellowAngle is not None:
+							if previousBlueAngle is not None and previousYellowAngle is not None:
+									angle = stabilize(avg([blueAngle, yellowAngle]), avg([previousBlueAngle, previousYellowAngle]), 2)
+									print("stabilizing both!")
+							else:
+									angle = avg([blueAngle, yellowAngle])
+									print("not stabilizing anything.")
 					else:
-						targetSpeed = BOOST_SPEED - abs(angle - 90) * VBOOST_MODIFIER
+							print("give up lol")
+							angle = 90
+				#print(f"Previous angles: {previousBlueAngle}, {previousYellowAngle}")
+				# Adds obstacle avoidance
+				#angle += finalAngleOffset
 
-					left, right = pwm(targetSpeed, angle - 90)
+				#angleLimit = 20
+				#angle = clamp(angle, [angleLimit, 180 - angleLimit])
+				
+				heading_img = heading(contourFrame, angle)
 
-					'''# U-turn code
-					blueEdges = cv2.Canny(blueMask, cannyMin, cannyMax)
-					yellowEdges = cv2.Canny(yellowMask, cannyMin, cannyMax)
+				show("Blue Mask", blueMask)
+				show("Yellow Mask", yellowMask)
+				show("Obstacle Mask", obstacleMask)
+				show("Finish Mask", greenMask)
+				show("Frame", frame)
+				show("Contours", contourFrame)
+				#show("Sign Mask", signMask, True)
+				show("Heading", heading_img, True)
 
-					blueLines = detect_line_segments(blueEdges)
-					yellowLines = detect_line_segments(yellowEdges)
+				print(f"Steering angle: {angle} degrees")
 
-					blueFit = slope_intercepts(blueLines)
-					yellowFit = slope_intercepts(yellowLines)
+				targetSpeed = BASE_SPEED
+				if abs(angle - 90) < XBOOST_ANGLE:
+					targetSpeed = BOOST_SPEED
+				elif abs(angle - 90) < VBOOST_ANGLE:
+					targetSpeed = BOOST_SPEED - abs(angle - 90) * VBOOST_MODIFIER
 
-					show("Blue Edges", blueEdges)
-					show("Yellow Edges", yellowEdges)
+				left, right = pwm(targetSpeed, angle - 90)
 
-					if left < 0:
-							left = 0
-					if right < 0:
-							right = 0
+				'''# U-turn code
+				blueEdges = cv2.Canny(blueMask, cannyMin, cannyMax)
+				yellowEdges = cv2.Canny(yellowMask, cannyMin, cannyMax)
 
-					if detect_uturn(blueFit):
-						if len(yellowContours) > 0:
-							if (cv2.contourArea(max(yellowContours, key=cv2.contourArea)) < overrideArea or (not otherNone)):
-								left = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
-								right = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
-								print("Blue U-turn detected!")
-					elif detect_uturn(yellowFit):
-						if len(blueContours) > 0:
-							if (cv2.contourArea(max(blueContours, key=cv2.contourArea)) < overrideArea or (not otherNone)):
-								left = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
-								right = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
-								print("Yellow U-turn detected")'''
+				blueLines = detect_line_segments(blueEdges)
+				yellowLines = detect_line_segments(yellowEdges)
 
-					print(f"Left: {round(left)}, Right: {round(right)}")
-					move(left, right) if DRIVER_INITIALIZED else 0
-					#time.sleep(0.005) # 'optimizations' lol
+				blueFit = slope_intercepts(blueLines)
+				yellowFit = slope_intercepts(yellowLines)
 
-			try:
-					if cv2.waitKey(1) & 0xff == ord('q'):
-							off()
-							break
-			except:
-					off()
-					pass
-except:
+				show("Blue Edges", blueEdges)
+				show("Yellow Edges", yellowEdges)
+
+				if left < 0:
+						left = 0
+				if right < 0:
+						right = 0
+
+				if detect_uturn(blueFit):
+					if len(yellowContours) > 0:
+						if (cv2.contourArea(max(yellowContours, key=cv2.contourArea)) < overrideArea or (not otherNone)):
+							left = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
+							right = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
+							print("Blue U-turn detected!")
+				elif detect_uturn(yellowFit):
+					if len(blueContours) > 0:
+						if (cv2.contourArea(max(blueContours, key=cv2.contourArea)) < overrideArea or (not otherNone)):
+							left = uTurnBackSpeed * BASE_SPEED if blueLeft else uTurnForwardSpeed * BASE_SPEED
+							right = uTurnForwardSpeed * BASE_SPEED if blueLeft else uTurnBackSpeed * BASE_SPEED
+							print("Yellow U-turn detected")'''
+
+				print(f"Left: {round(left)}, Right: {round(right)}")
+				move(left, right) if DRIVER_INITIALIZED else 0
+				#time.sleep(0.005) # 'optimizations' lol
+
+		try:
+				if cv2.waitKey(1) & 0xff == ord('q'):
+						off()
+						break
+		except:
+				off()
+				pass
+"""except:
 	print("ignore this if it's not something with the code!")
 	off()
-	pass
+	pass"""
 
 off()
 cap.release()

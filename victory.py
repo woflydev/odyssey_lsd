@@ -13,7 +13,7 @@ def victory():
 def wheelie():
   move(60, 60, 500)
   move(-60, -60, 500)
-  move(60, 60, 600)
+  move(60, 60, 300)
   move(70, 70, 100)
   move(80, 80, 250)
   move(90, 90, 300)
