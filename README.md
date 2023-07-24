@@ -1,4 +1,10 @@
-# Project Odyssey 2023 (Odyssey LSD)
+# Project Odyssey 2023: REDEMPTION AT LAST! (Odyssey LSD)
+
+Our hard work finally paid off, as we were crowned the **Best Overall** and **1st Place** champions of the Droid Racing Challenge 2023! Thank you so much to the [QUT Robotics Club](https://www.instagram.com/p/Cu9Vgmuro8u/?img_index=1) for hosting such an awesome event and for allowing us to attend!
+- [Instagram](https://www.instagram.com/p/Cu8mdIEtegS/?img_index=1)
+- [Twitter](https://twitter.com/QUT/status/1679271733004578818)
+
+![team photo](https://github.com/woflydev/odyssey_cnn/blob/main/readme/team.jpg)
 
 ## Sister repositories
 Check ``odyssey_cnn`` for more detailed information about us and the team!
