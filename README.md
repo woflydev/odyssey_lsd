@@ -16,13 +16,53 @@ Check ``odyssey_cnn`` for more detailed information about us and the team!
 | [woflydev/odyssey_img](https://github.com/woflydev/odyssey_img) | Data exported from woflydev/odyssey_data |
 | [woflydev/odyssey_docs](https://github.com/woflydev/odyssey_docs) | Upcoming documentation for Project Odyssey files and regular progress updates. |
 
+## Installation
+
+> **⚠ Deprecated API Documentation**
+> ---
+> If you plan on using our API and code, beware that:
+> - some documentation below is outdated
+> - we do not plan on updating the documentation here
+> - instead, check [woflydev/odyssey_docs](https://github.com/woflydev/odyssey_docs) for future reference.
+
+Git (recommended):
+```bash
+git clone https://github.com/woflydev/odyssey_lsd.git
+cd odyssey_lsd
+pip install -r requirements.txt
+sudo chmod +x permissions.sh     # required for Arduino port access
+```
+
+GitHub CLI:
+```bash
+gh repo clone woflydev/odyssey_lsd
+cd odyssey_cnn
+pip install -r requirements.txt
+sudo chmod +x permissions.sh     # required for Arduino port access
+```
+
+## Usage / Examples
+
+Please note that it is recommended to install the [SSH Extension for Visual Studio Code](https://code.visualstudio.com/docs/remote/ssh-tutorial) so you can have a nice development UI remotely from the Jetson.
+
+```python
+sudo python3 line_v7_qut_track_1_variable_boost.py
+```
+
+```python
+sudo python3 line_v7_qut_track_2_variable_boost.py
+```
+
+Both of these files are identical in central processing. However, there are minor tweaks with how the robot behaves around obstacles and curves. For ``track_1``, due to a higher number of straight sections along the track, the robot handles curves much more agressively and will aim to match top speed as quickly as possible to maximize time savings. However, ``track_2`` focused on manoeuvrability and consistency. As a result, the we set the robot to dampen turns and use smoother acceleration curves.
+
+The program will automatically initialize motors and camera equipment. When it's done, it will ask for you to press the ``enter`` key to begin! We also implemented automatic stopping when the robot sees the finish line. On seeing the line, the robot will go into 'mad dash' mode, and sprint towards the finish line. On stopping, the robot will prompt for another input to start the next lap straight away. It will also output a ``time`` in seconds for track completion.
+
 ## Authors
 
 - [@woflydev](https://www.github.com/woflydev)
 - [@AwesomeGuy000](https://github.com/awesomeguy000)
 - [@xdBeanjo](https://github.com/xdBeanjo)
 - [@hashtable2020](https://github.com/hashtable2020)
-- [@echan103](https://github.com/echan103)
 - [@kelco-chan](https://github.com/kelco-chan)
 
 ## Contributing, Forking, and Support
