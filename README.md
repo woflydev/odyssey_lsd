@@ -8,6 +8,11 @@ Our hard work finally paid off, as we were crowned the **Best Overall** and **1s
 
 ![team photo](https://github.com/woflydev/odyssey_cnn/blob/main/readme/team.jpg)
 
+# About Us (2025 Update)
+
+The Odyssey Robotics brand and team has been retired, but most of our members are continuing as [Theseus Robotics](https://theseusrobotics.org). Our old website can still be accessed [here](https://aboutodyssey.web.app).
+Visit [our new website](https://theseusrobotics.org) to learn more about us and the team.
+
 ## Sister repositories
 Check ``odyssey_cnn`` for more detailed information about us and the team!
 | Repo | Description |
